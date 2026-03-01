@@ -5,6 +5,7 @@ import { useStore } from 'vuex'
 const store = useStore()
 const genres = computed(() => store.state.genres.slice(0, 8))
 const countries = computed(() => store.state.countries.slice(0, 8))
+const currentYear = new Date().getFullYear()
 </script>
 
 <template>
@@ -49,7 +50,7 @@ const countries = computed(() => store.state.countries.slice(0, 8))
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; 2024 Free Movie. Tất cả các quyền được bảo lưu.</p>
+        <p>&copy; {{ currentYear }} Free Movie. Tất cả các quyền được bảo lưu.</p>
         <p class="disclaimer">
           Website không lưu trữ bất kỳ tệp phim nào trên máy chủ.
           Tất cả nội dung được cung cấp bởi bên thứ ba.
