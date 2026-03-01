@@ -31,7 +31,7 @@ const search = async () => {
     const data = await movieApi.searchMovies(keyword, { page, limit: 24 })
     movies.value = data?.items ?? []
     totalPages.value = data?.params?.pagination?.totalPages ?? 1
-    document.title = `Tìm kiếm: ${keyword} - PhimHay`
+    document.title = `Tìm kiếm: ${keyword} - Free Movie`
   } catch (error) {
     console.error('Search failed:', error)
     movies.value = []
@@ -93,17 +93,32 @@ watch(() => [route.query.q, route.query.page], search)
 
 <style scoped>
 .search-page {
-  padding: 2rem 0;
+  padding: 2.5rem 0;
+  min-height: calc(100vh - 72px - 200px);
 }
 
 .page-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.page-title span {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .result-count {
-  color: var(--text-secondary);
-  margin-bottom: 1.5rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  display: inline-block;
+  border: 1px solid var(--border-color);
 }
 </style>

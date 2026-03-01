@@ -33,7 +33,7 @@ const fetchMovies = async () => {
     totalPages.value = data.params.pagination.totalPages
 
     const genreName = currentGenre.value?.name || slug
-    document.title = `Phim ${genreName} - PhimHay`
+    document.title = `Phim ${genreName} - Free Movie`
   } catch (error) {
     console.error('Failed to fetch movies:', error)
   } finally {
@@ -80,23 +80,25 @@ watch(() => [route.params.slug, route.query.page], fetchMovies)
 
 <style scoped>
 .genre-page {
-  padding: 2rem 0;
+  padding: 2.5rem 0;
+  min-height: calc(100vh - 72px - 200px);
 }
 
 .page-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2.5rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  letter-spacing: -0.02em;
 }
 
 .page-title::before {
   content: '';
   width: 4px;
-  height: 28px;
-  background: var(--primary-color);
-  border-radius: 2px;
+  height: 32px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
 }
 </style>

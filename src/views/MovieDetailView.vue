@@ -16,7 +16,7 @@ const fetchMovie = async () => {
   try {
     const slug = route.params.slug as string
     movie.value = await movieApi.getMovieDetail(slug)
-    document.title = `${movie.value.name} - PhimHay`
+    document.title = `${movie.value.name} - Free Movie`
   } catch (err) {
     error.value = 'Không thể tải thông tin phim'
     console.error('Failed to fetch movie:', err)
@@ -162,7 +162,7 @@ watch(() => route.params.slug, fetchMovie)
 <style scoped>
 .movie-detail-page {
   position: relative;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 72px);
 }
 
 .movie-backdrop {
@@ -170,7 +170,7 @@ watch(() => route.params.slug, fetchMovie)
   top: 0;
   left: 0;
   right: 0;
-  height: 500px;
+  height: 550px;
   background-size: cover;
   background-position: center top;
   z-index: 0;
@@ -179,28 +179,35 @@ watch(() => route.params.slug, fetchMovie)
 .backdrop-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(20, 20, 20, 0.7) 0%, var(--bg-color) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 15, 0.5) 0%,
+    rgba(10, 10, 15, 0.8) 50%,
+    var(--bg-color) 100%
+  );
+  backdrop-filter: blur(2px);
 }
 
 .container {
   position: relative;
   z-index: 1;
   padding-top: 2rem;
-  padding-bottom: 2rem;
+  padding-bottom: 3rem;
 }
 
 .movie-content {
   display: flex;
-  gap: 2rem;
-  margin-bottom: 3rem;
+  gap: 3rem;
+  margin-bottom: 4rem;
 }
 
 .movie-poster {
   flex-shrink: 0;
-  width: 300px;
-  border-radius: 12px;
+  width: 320px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg), 0 0 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--glass-border);
 }
 
 .movie-poster img {
@@ -213,23 +220,25 @@ watch(() => route.params.slug, fetchMovie)
 }
 
 .movie-title {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 800;
   margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .movie-origin-name {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
+  font-size: 1.125rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
 }
 
 .movie-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
 }
 
 .meta-item {
@@ -237,6 +246,11 @@ watch(() => route.params.slug, fetchMovie)
   align-items: center;
   gap: 0.5rem;
   color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
 }
 
 .movie-tags {
@@ -244,40 +258,48 @@ watch(() => route.params.slug, fetchMovie)
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .tag-label {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .tag {
-  padding: 0.25rem 0.75rem;
-  background: var(--bg-card);
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: 0.375rem 0.875rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 500;
   transition: var(--transition);
 }
 
 .tag:hover {
   background: var(--primary-color);
+  border-color: var(--primary-color);
   color: white;
+  box-shadow: 0 0 20px var(--primary-glow);
 }
 
 .tag-text {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .movie-status {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   color: var(--text-secondary);
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: var(--bg-card);
-  border-radius: 8px;
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  font-size: 0.9rem;
 }
 
 .movie-actions {
@@ -286,12 +308,18 @@ watch(() => route.params.slug, fetchMovie)
 }
 
 .movie-description {
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
+  padding: 2rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(12px);
 }
 
 .description-content {
   color: var(--text-secondary);
-  line-height: 1.8;
+  line-height: 1.9;
+  font-size: 0.95rem;
 }
 
 .movie-episodes {
@@ -299,35 +327,56 @@ watch(() => route.params.slug, fetchMovie)
 }
 
 .server-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(12px);
 }
 
 .server-name {
   font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.server-name::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
 }
 
 .episode-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.625rem;
 }
 
 .episode-btn {
-  padding: 0.5rem 1rem;
-  background: var(--bg-card);
-  border-radius: 4px;
-  font-size: 0.9rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
   transition: var(--transition);
-  min-width: 60px;
+  min-width: 70px;
   text-align: center;
 }
 
 .episode-btn:hover {
   background: var(--primary-color);
+  border-color: var(--primary-color);
   color: white;
+  box-shadow: 0 0 20px var(--primary-glow);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
@@ -335,14 +384,15 @@ watch(() => route.params.slug, fetchMovie)
     flex-direction: column;
     align-items: center;
     text-align: center;
+    gap: 2rem;
   }
 
   .movie-poster {
-    width: 200px;
+    width: 220px;
   }
 
   .movie-title {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
 
   .movie-meta,
@@ -352,6 +402,12 @@ watch(() => route.params.slug, fetchMovie)
 
   .movie-actions {
     justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .movie-description,
+  .server-group {
+    padding: 1.25rem;
   }
 }
 </style>

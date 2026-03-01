@@ -30,7 +30,7 @@ const toggleMenu = () => {
   <header class="header">
     <div class="container header-container">
       <router-link to="/" class="logo">
-        <span class="logo-text">PhimHay</span>
+        <span class="logo-text">Free Movie</span>
       </router-link>
 
       <nav class="nav" :class="{ 'nav-open': isMenuOpen }">
@@ -107,10 +107,11 @@ const toggleMenu = () => {
   top: 0;
   left: 0;
   right: 0;
-  height: 70px;
-  background: rgba(20, 20, 20, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-color);
+  height: 72px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
   z-index: 1000;
 }
 
@@ -130,14 +131,18 @@ const toggleMenu = () => {
 
 .logo-text {
   font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary-color);
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
 .nav-list {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .nav-item {
@@ -146,80 +151,98 @@ const toggleMenu = () => {
 
 .nav-link {
   display: block;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
 }
 
-.nav-link:hover,
+.nav-link:hover {
+  color: var(--text-color);
+  background: var(--bg-elevated);
+}
+
 .nav-link.router-link-active {
   color: var(--primary-color);
 }
 
 .dropdown-menu {
   position: absolute;
-  top: 100%;
-  left: 0;
-  min-width: 180px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.5rem 0;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  min-width: 200px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 0.5rem;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(10px);
   transition: var(--transition);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
 }
 
 .dropdown:hover .dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 
 .dropdown-menu li a {
   display: block;
-  padding: 0.6rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   transition: var(--transition);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
 }
 
 .dropdown-menu li a:hover {
-  background: var(--bg-card);
-  color: var(--primary-color);
+  background: var(--bg-elevated);
+  color: var(--text-color);
 }
 
 .dropdown-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  min-width: 300px;
+  min-width: 320px;
+  gap: 0.25rem;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 25px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
   overflow: hidden;
+  transition: var(--transition);
+}
+
+.search-box:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 .search-box input {
-  width: 200px;
-  padding: 0.6rem 1rem;
+  width: 220px;
+  padding: 0.75rem 1.25rem;
   background: transparent;
   border: none;
   color: var(--text-color);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .search-box input::placeholder {
@@ -231,7 +254,7 @@ const toggleMenu = () => {
 }
 
 .search-btn {
-  padding: 0.6rem 1rem;
+  padding: 0.75rem 1rem;
   background: transparent;
   color: var(--text-secondary);
   transition: var(--transition);
@@ -243,23 +266,39 @@ const toggleMenu = () => {
 
 .search-toggle {
   display: none;
-  padding: 0.5rem;
-  background: transparent;
+  padding: 0.625rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
   color: var(--text-color);
+  transition: var(--transition);
+}
+
+.search-toggle:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .menu-toggle {
   display: none;
   flex-direction: column;
   gap: 5px;
-  padding: 0.5rem;
-  background: transparent;
+  padding: 0.625rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.menu-toggle:hover {
+  border-color: var(--primary-color);
 }
 
 .menu-toggle span {
-  width: 24px;
+  width: 20px;
   height: 2px;
   background: var(--text-color);
+  border-radius: var(--radius-full);
   transition: var(--transition);
 }
 
@@ -271,10 +310,12 @@ const toggleMenu = () => {
   .search-box.search-open {
     display: flex;
     position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin: 0.5rem 1rem;
+    top: calc(100% + 8px);
+    left: 16px;
+    right: 16px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-lg);
   }
 
   .search-box.search-open input {
@@ -282,19 +323,19 @@ const toggleMenu = () => {
   }
 
   .search-toggle {
-    display: block;
+    display: flex;
   }
 }
 
 @media (max-width: 768px) {
   .nav {
     position: fixed;
-    top: 70px;
+    top: 72px;
     left: 0;
     right: 0;
     bottom: 0;
     background: var(--bg-color);
-    padding: 1rem;
+    padding: 1.5rem;
     transform: translateX(-100%);
     transition: var(--transition);
     overflow-y: auto;
@@ -307,6 +348,12 @@ const toggleMenu = () => {
   .nav-list {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .nav-link {
+    padding: 1rem;
+    font-size: 1rem;
   }
 
   .dropdown-menu {
@@ -314,15 +361,21 @@ const toggleMenu = () => {
     opacity: 1;
     visibility: visible;
     transform: none;
-    background: transparent;
+    background: var(--bg-elevated);
     border: none;
-    padding-left: 1rem;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    box-shadow: none;
   }
 
   .dropdown-grid {
     display: flex;
     flex-wrap: wrap;
     min-width: auto;
+  }
+
+  .dropdown-grid li {
+    flex: 1 1 50%;
   }
 
   .menu-toggle {

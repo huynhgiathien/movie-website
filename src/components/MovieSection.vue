@@ -37,26 +37,41 @@ defineProps<{
 
 <style scoped>
 .movie-section {
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .view-all {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.375rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
   transition: var(--transition);
 }
 
 .view-all:hover {
   color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.view-all svg {
+  transition: var(--transition);
+}
+
+.view-all:hover svg {
+  transform: translateX(3px);
 }
 </style>

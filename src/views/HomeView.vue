@@ -66,6 +66,6 @@ onMounted(async () => {
 
 <style scoped>
 .home-page {
-  padding: 2rem 0;
+  padding: 2.5rem 0;
 }
 </style>

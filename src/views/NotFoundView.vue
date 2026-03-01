@@ -24,7 +24,7 @@
 
 <style scoped>
 .not-found-page {
-  min-height: calc(100vh - 200px);
+  min-height: calc(100vh - 72px - 200px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -32,38 +32,50 @@
 
 .not-found-content {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 4rem 1.5rem;
 }
 
 .error-code {
-  font-size: 8rem;
-  font-weight: 700;
-  color: var(--primary-color);
+  font-size: 10rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   line-height: 1;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.04em;
+  text-shadow: 0 0 80px var(--primary-glow);
 }
 
 .error-title {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 1rem;
+  letter-spacing: -0.02em;
 }
 
 .error-desc {
-  color: var(--text-secondary);
-  margin-bottom: 2rem;
-  max-width: 400px;
+  color: var(--text-muted);
+  margin-bottom: 2.5rem;
+  max-width: 420px;
   margin-left: auto;
   margin-right: auto;
+  font-size: 1.05rem;
+  line-height: 1.7;
 }
 
 @media (max-width: 768px) {
   .error-code {
-    font-size: 5rem;
+    font-size: 6rem;
   }
 
   .error-title {
     font-size: 1.5rem;
+  }
+
+  .error-desc {
+    font-size: 0.95rem;
   }
 }
 </style>

@@ -12,7 +12,7 @@ const countries = computed(() => store.state.countries.slice(0, 8))
     <div class="container">
       <div class="footer-grid">
         <div class="footer-col">
-          <h3 class="footer-title">PhimHay</h3>
+          <h3 class="footer-title">Free Movie</h3>
           <p class="footer-desc">
             Website xem phim online chất lượng cao với kho phim đa dạng,
             cập nhật liên tục các bộ phim mới nhất.
@@ -49,7 +49,7 @@ const countries = computed(() => store.state.countries.slice(0, 8))
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; 2024 PhimHay. Tất cả các quyền được bảo lưu.</p>
+        <p>&copy; 2024 Free Movie. Tất cả các quyền được bảo lưu.</p>
         <p class="disclaimer">
           Website không lưu trữ bất kỳ tệp phim nào trên máy chủ.
           Tất cả nội dung được cung cấp bởi bên thứ ba.
@@ -63,58 +63,80 @@ const countries = computed(() => store.state.countries.slice(0, 8))
 .footer {
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
-  padding: 3rem 0 1.5rem;
-  margin-top: 3rem;
+  padding: 4rem 0 2rem;
+  margin-top: 4rem;
+  position: relative;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), var(--secondary-color), transparent);
+  opacity: 0.5;
 }
 
 .footer-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 2rem;
+  gap: 3rem;
 }
 
 .footer-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary-color);
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 1rem;
+  letter-spacing: -0.02em;
 }
 
 .footer-desc {
   color: var(--text-secondary);
   font-size: 0.9rem;
-  line-height: 1.7;
+  line-height: 1.8;
+  max-width: 300px;
 }
 
 .footer-heading {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
   color: var(--text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .footer-links li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .footer-links a {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.9rem;
   transition: var(--transition);
+  display: inline-block;
 }
 
 .footer-links a:hover {
   color: var(--primary-color);
+  transform: translateX(4px);
 }
 
 .footer-links-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem 1rem;
 }
 
 .footer-bottom {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
   border-top: 1px solid var(--border-color);
   text-align: center;
 }
@@ -125,13 +147,19 @@ const countries = computed(() => store.state.countries.slice(0, 8))
 }
 
 .disclaimer {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   font-size: 0.8rem !important;
+  opacity: 0.7;
 }
 
 @media (max-width: 768px) {
+  .footer {
+    padding: 3rem 0 1.5rem;
+  }
+
   .footer-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 2rem;
   }
 
   .footer-col:first-child {
