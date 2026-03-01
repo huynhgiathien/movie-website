@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, ref, onMounted, onUnmounted } from 'vue'
+import { computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 
@@ -8,7 +8,6 @@ const router = useRouter()
 const route = useRoute()
 
 const miniPlayer = computed(() => store.state.miniPlayer)
-const playerRef = ref<HTMLDivElement | null>(null)
 
 // Check if we're on the watch page for the current movie
 const isOnWatchPage = computed(() => {
@@ -38,23 +37,6 @@ const goToMovie = () => {
     router.push(`/xem-phim/${miniPlayer.value.movieSlug}`)
   }
 }
-
-// Provide a target element for the main player area
-const mainPlayerTarget = ref<HTMLElement | null>(null)
-
-onMounted(() => {
-  // Find the main player target element
-  const findTarget = () => {
-    mainPlayerTarget.value = document.getElementById('main-player-target')
-  }
-  findTarget()
-
-  // Watch for DOM changes
-  const observer = new MutationObserver(findTarget)
-  observer.observe(document.body, { childList: true, subtree: true })
-
-  onUnmounted(() => observer.disconnect())
-})
 </script>
 
 <template>
