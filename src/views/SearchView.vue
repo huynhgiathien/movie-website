@@ -29,11 +29,13 @@ const search = async () => {
 
   try {
     const data = await movieApi.searchMovies(keyword, { page, limit: 24 })
-    movies.value = data.items
-    totalPages.value = data.params.pagination.totalPages
+    movies.value = data?.items ?? []
+    totalPages.value = data?.params?.pagination?.totalPages ?? 1
     document.title = `Tìm kiếm: ${keyword} - PhimHay`
   } catch (error) {
     console.error('Search failed:', error)
+    movies.value = []
+    totalPages.value = 1
   } finally {
     loading.value = false
   }
