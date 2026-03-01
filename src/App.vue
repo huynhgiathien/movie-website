@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useStore } from 'vuex'
 import HeaderComponent from '@/components/HeaderComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
+import GlobalPlayer from '@/components/GlobalPlayer.vue'
 
 const store = useStore()
 
@@ -19,6 +20,7 @@ onMounted(() => {
       <router-view />
     </main>
     <FooterComponent />
+    <GlobalPlayer />
   </div>
 </template>
 

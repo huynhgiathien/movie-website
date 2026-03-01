@@ -2,6 +2,15 @@ import { createStore } from 'vuex'
 import { movieApi } from '@/api'
 import type { Movie, MovieDetail, GenreItem } from '@/types'
 
+interface MiniPlayerState {
+  isActive: boolean
+  isMinimized: boolean
+  videoUrl: string | null
+  movieName: string | null
+  movieSlug: string | null
+  episodeName: string | null
+}
+
 interface State {
   recentMovies: Movie[]
   seriesMovies: Movie[]
@@ -17,6 +26,7 @@ interface State {
     totalPages: number
     totalItems: number
   }
+  miniPlayer: MiniPlayerState
 }
 
 export default createStore<State>({
@@ -34,6 +44,14 @@ export default createStore<State>({
       currentPage: 1,
       totalPages: 1,
       totalItems: 0
+    },
+    miniPlayer: {
+      isActive: false,
+      isMinimized: false,
+      videoUrl: null,
+      movieName: null,
+      movieSlug: null,
+      episodeName: null
     }
   },
 
@@ -67,6 +85,25 @@ export default createStore<State>({
     },
     SET_PAGINATION(state, pagination: { currentPage: number; totalPages: number; totalItems: number }) {
       state.pagination = pagination
+    },
+    SET_MINI_PLAYER(state, payload: Partial<MiniPlayerState>) {
+      state.miniPlayer = { ...state.miniPlayer, ...payload }
+    },
+    CLOSE_MINI_PLAYER(state) {
+      state.miniPlayer = {
+        isActive: false,
+        isMinimized: false,
+        videoUrl: null,
+        movieName: null,
+        movieSlug: null,
+        episodeName: null
+      }
+    },
+    MINIMIZE_PLAYER(state) {
+      state.miniPlayer.isMinimized = true
+    },
+    MAXIMIZE_PLAYER(state) {
+      state.miniPlayer.isMinimized = false
     }
   },
 
