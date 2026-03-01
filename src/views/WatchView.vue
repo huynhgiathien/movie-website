@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { movieApi } from '@/api'
 import type { MovieDetail, EpisodeData } from '@/types'
@@ -12,6 +12,11 @@ const loading = ref(true)
 const error = ref('')
 const currentServer = ref(0)
 const currentEpisode = ref<EpisodeData | null>(null)
+
+// Mini player state
+const playerContainer = ref<HTMLElement | null>(null)
+const showMiniPlayer = ref(false)
+const miniPlayerClosed = ref(false)
 
 const episodes = computed(() => {
   if (!movie.value?.episodes?.length) return []
@@ -68,8 +73,40 @@ const selectServer = (index: number) => {
 
 const getImageUrl = (url: string | null) => movieApi.getImageUrl(url)
 
-onMounted(fetchMovie)
-watch(() => route.params.slug, fetchMovie)
+// Mini player scroll handler
+const handleScroll = () => {
+  if (!playerContainer.value || miniPlayerClosed.value) return
+
+  const rect = playerContainer.value.getBoundingClientRect()
+  const isOutOfView = rect.bottom < 100
+  showMiniPlayer.value = isOutOfView
+}
+
+const closeMiniPlayer = () => {
+  miniPlayerClosed.value = true
+  showMiniPlayer.value = false
+}
+
+const scrollToPlayer = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  showMiniPlayer.value = false
+  miniPlayerClosed.value = false
+}
+
+onMounted(() => {
+  fetchMovie()
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
+watch(() => route.params.slug, () => {
+  fetchMovie()
+  miniPlayerClosed.value = false
+  showMiniPlayer.value = false
+})
 </script>
 
 <template>
@@ -81,7 +118,8 @@ watch(() => route.params.slug, fetchMovie)
     </div>
 
     <template v-else-if="movie">
-      <div class="player-container">
+      <!-- Main Player -->
+      <div ref="playerContainer" class="player-container">
         <div class="player-wrapper">
           <iframe
             v-if="currentEpisode?.link_embed"
@@ -95,6 +133,42 @@ watch(() => route.params.slug, fetchMovie)
           </div>
         </div>
       </div>
+
+      <!-- Mini Player -->
+      <Teleport to="body">
+        <div
+          v-if="showMiniPlayer && currentEpisode?.link_embed"
+          class="mini-player"
+        >
+          <div class="mini-player-header">
+            <span class="mini-player-title">{{ movie.name }}</span>
+            <div class="mini-player-actions">
+              <button class="mini-player-btn" @click="scrollToPlayer" title="Mở rộng">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <polyline points="9 21 3 21 3 15"></polyline>
+                  <line x1="21" y1="3" x2="14" y2="10"></line>
+                  <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+              </button>
+              <button class="mini-player-btn" @click="closeMiniPlayer" title="Đóng">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="mini-player-video">
+            <iframe
+              :src="currentEpisode.link_embed"
+              frameborder="0"
+              allowfullscreen
+              allow="autoplay; encrypted-media"
+            ></iframe>
+          </div>
+        </div>
+      </Teleport>
 
       <div class="container">
         <div class="watch-info">
@@ -365,6 +439,97 @@ watch(() => route.params.slug, fetchMovie)
   .server-selector,
   .episode-selector {
     padding: 1.25rem;
+  }
+}
+
+/* Mini Player Styles */
+.mini-player {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  background: #0a0a0f;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: 9999;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mini-player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(20, 20, 28, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mini-player-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.mini-player-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-player-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mini-player-btn:hover {
+  background: rgba(99, 102, 241, 0.3);
+  color: #f1f5f9;
+}
+
+.mini-player-video {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #000;
+}
+
+.mini-player-video iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 480px) {
+  .mini-player {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    width: auto;
   }
 }
 </style>
