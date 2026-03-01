@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 
@@ -9,6 +9,7 @@ const store = useStore()
 const searchQuery = ref('')
 const isMenuOpen = ref(false)
 const isSearchOpen = ref(false)
+const searchInput = ref<HTMLInputElement | null>(null)
 
 const genres = computed(() => store.state.genres.slice(0, 10))
 const countries = computed(() => store.state.countries.slice(0, 10))
@@ -19,6 +20,13 @@ const handleSearch = () => {
     searchQuery.value = ''
     isSearchOpen.value = false
   }
+}
+
+const openSearch = () => {
+  isSearchOpen.value = true
+  nextTick(() => {
+    searchInput.value?.focus()
+  })
 }
 
 const toggleMenu = () => {
@@ -73,19 +81,27 @@ const toggleMenu = () => {
       <div class="header-actions">
         <div class="search-box" :class="{ 'search-open': isSearchOpen }">
           <input
+            ref="searchInput"
             v-model="searchQuery"
-            type="text"
+            type="search"
+            inputmode="search"
             placeholder="Tìm kiếm phim..."
             @keyup.enter="handleSearch"
           />
-          <button class="search-btn" @click="handleSearch">
+          <button class="search-btn" type="button" @click="handleSearch">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/>
               <path d="m21 21-4.35-4.35"/>
             </svg>
           </button>
+          <button class="search-close-btn" type="button" @click="isSearchOpen = false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
-        <button class="search-toggle" @click="isSearchOpen = !isSearchOpen">
+        <button class="search-toggle" type="button" @click="openSearch">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/>
             <path d="m21 21-4.35-4.35"/>
@@ -269,6 +285,18 @@ const toggleMenu = () => {
   color: var(--primary-color);
 }
 
+.search-close-btn {
+  display: none;
+  padding: 0.75rem;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.search-close-btn:hover {
+  color: var(--primary-color);
+}
+
 .search-toggle {
   display: none;
   padding: 0.625rem;
@@ -308,23 +336,42 @@ const toggleMenu = () => {
 }
 
 @media (max-width: 1024px) {
+  .header-container {
+    position: relative;
+  }
+
   .search-box {
     display: none;
   }
 
   .search-box.search-open {
     display: flex;
-    position: absolute;
-    top: calc(100% + 8px);
+    position: fixed;
+    top: 80px;
     left: 16px;
     right: 16px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
+    background: var(--bg-color);
+    border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-lg);
+    z-index: 1001;
   }
 
   .search-box.search-open input {
     width: 100%;
+    flex: 1;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .search-box.search-open .search-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-box.search-open .search-btn {
+    padding: 0.75rem 0.5rem;
   }
 
   .search-toggle {
