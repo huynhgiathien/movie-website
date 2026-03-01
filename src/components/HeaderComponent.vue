@@ -139,6 +139,11 @@ const toggleMenu = () => {
   letter-spacing: -0.02em;
 }
 
+.nav {
+  display: flex;
+  align-items: center;
+}
+
 .nav-list {
   display: flex;
   align-items: center;
@@ -329,16 +334,23 @@ const toggleMenu = () => {
 
 @media (max-width: 768px) {
   .nav {
+    display: block;
     position: fixed;
     top: 72px;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: var(--bg-color);
+    height: calc(100vh - 72px);
+    height: calc(100dvh - 72px);
+    background: #0a0a0f;
     padding: 1.5rem;
+    padding-bottom: 100px;
     transform: translateX(-100%);
-    transition: var(--transition);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    z-index: 999;
   }
 
   .nav.nav-open {
@@ -346,14 +358,21 @@ const toggleMenu = () => {
   }
 
   .nav-list {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
+    width: 100%;
+  }
+
+  .nav-item {
+    width: 100%;
   }
 
   .nav-link {
     padding: 1rem;
     font-size: 1rem;
+    color: var(--text-color);
   }
 
   .dropdown-menu {
@@ -361,21 +380,32 @@ const toggleMenu = () => {
     opacity: 1;
     visibility: visible;
     transform: none;
-    background: var(--bg-elevated);
-    border: none;
-    padding: 0.5rem;
+    background: rgba(30, 30, 40, 0.6);
+    backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 0.75rem;
     margin-top: 0.5rem;
+    margin-left: 0;
     box-shadow: none;
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .dropdown-menu li a {
+    color: var(--text-secondary);
+    padding: 0.75rem 1rem;
   }
 
   .dropdown-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     min-width: auto;
+    gap: 0.25rem;
   }
 
   .dropdown-grid li {
-    flex: 1 1 50%;
+    flex: none;
   }
 
   .menu-toggle {
