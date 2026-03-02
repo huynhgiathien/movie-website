@@ -44,6 +44,7 @@ onBeforeUnmount(() => {
 })
 
 const countries = [
+  { slug: 'viet-nam', name: 'Việt Nam' },
   { slug: 'han-quoc', name: 'Hàn Quốc' },
   { slug: 'nhat-ban', name: 'Nhật Bản' },
   { slug: 'trung-quoc', name: 'Trung Quốc' },

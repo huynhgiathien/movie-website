@@ -145,6 +145,7 @@ ul, ol {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
+  max-width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -160,7 +161,7 @@ ul, ol {
 
 @media (max-width: 480px) {
   .movie-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 }

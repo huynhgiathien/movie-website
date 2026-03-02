@@ -63,6 +63,8 @@ const genre = computed(() => {
   flex-direction: column;
   gap: 10px;
   transition: var(--transition);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .movie-card:hover {
