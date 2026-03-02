@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { movieApi } from '@/api'
@@ -96,8 +96,38 @@ const selectServer = (index: number) => {
   }
 }
 
+// Screen Wake Lock - keep screen on while watching
+let wakeLock: WakeLockSentinel | null = null
+
+const requestWakeLock = async () => {
+  if (!('wakeLock' in navigator)) return
+  try {
+    wakeLock = await navigator.wakeLock.request('screen')
+    wakeLock.addEventListener('release', () => { wakeLock = null })
+  } catch {
+    // Wake lock request failed (e.g. low battery)
+  }
+}
+
+const releaseWakeLock = () => {
+  wakeLock?.release()
+  wakeLock = null
+}
+
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible' && currentEpisode.value?.link_embed) {
+    requestWakeLock()
+  }
+}
+
 onMounted(() => {
   fetchMovie()
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onBeforeUnmount(() => {
+  releaseWakeLock()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 watch(() => route.params.slug, () => {
@@ -106,6 +136,11 @@ watch(() => route.params.slug, () => {
 
 watch(currentEpisode, () => {
   updateGlobalPlayer()
+  if (currentEpisode.value?.link_embed) {
+    requestWakeLock()
+  } else {
+    releaseWakeLock()
+  }
 })
 </script>
 
