@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { movieApi } from '@/api'
 import type { MovieDetail } from '@/types'
@@ -8,6 +8,28 @@ const route = useRoute()
 const movie = ref<MovieDetail | null>(null)
 const loading = ref(true)
 const error = ref('')
+const showTrailer = ref(false)
+
+const trailerEmbedUrl = computed(() => {
+  const url = movie.value?.trailer_url
+  if (!url) return ''
+  // Convert YouTube watch URL to embed URL
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
+  if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`
+  // Already an embed URL or other format
+  if (url.includes('youtube.com/embed/')) return url
+  return url
+})
+
+const openTrailer = () => {
+  showTrailer.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+const closeTrailer = () => {
+  showTrailer.value = false
+  document.body.style.overflow = ''
+}
 
 const fetchMovie = async () => {
   loading.value = true
@@ -83,18 +105,17 @@ watch(() => route.params.slug, fetchMovie)
                 </svg>
                 Xem Phim
               </router-link>
-              <a
+              <button
                 v-if="movie.trailer_url"
-                :href="movie.trailer_url"
-                target="_blank"
                 class="btn btn-secondary action-btn"
+                @click="openTrailer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="m15 10-4 4V6l4 4z"/>
                   <rect x="2" y="4" width="20" height="16" rx="2"/>
                 </svg>
                 Trailer
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -161,6 +182,27 @@ watch(() => route.params.slug, fetchMovie)
           </div>
         </div>
       </section>
+      <!-- Trailer Modal -->
+      <Teleport to="body">
+        <div v-if="showTrailer" class="trailer-modal" @click.self="closeTrailer">
+          <div class="trailer-container">
+            <button class="trailer-close" @click="closeTrailer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <div class="trailer-player">
+              <iframe
+                :src="trailerEmbedUrl"
+                frameborder="0"
+                allowfullscreen
+                allow="autoplay; encrypted-media; picture-in-picture"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </Teleport>
     </template>
   </div>
 </template>
@@ -472,6 +514,62 @@ watch(() => route.params.slug, fetchMovie)
   .info-section {
     padding: 32px 24px;
   }
+}
+
+/* Trailer Modal */
+.trailer-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.trailer-container {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+}
+
+.trailer-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.trailer-close:hover {
+  background: rgba(229, 9, 20, 0.6);
+}
+
+.trailer-player {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.trailer-player iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 @media (max-width: 768px) {
