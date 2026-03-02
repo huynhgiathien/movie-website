@@ -29,10 +29,16 @@ onMounted(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .main-content {
   flex: 1;
   padding-top: 72px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 </style>

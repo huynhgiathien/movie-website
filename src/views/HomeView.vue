@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { useStore } from 'vuex'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { movieApi } from '@/api'
 import MovieSection from '@/components/MovieSection.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import type { Movie } from '@/types'
-
-const store = useStore()
 
 const recentMovies = ref<Movie[]>([])
 const seriesMovies = ref<Movie[]>([])
@@ -15,9 +12,47 @@ const animeMovies = ref<Movie[]>([])
 const filteredMovies = ref<Movie[]>([])
 const loading = ref(true)
 const filterLoading = ref(false)
-const heroMovie = ref<Movie | null>(null)
 
-const countries = computed(() => store.state.countries.slice(0, 6))
+// Hero carousel
+const heroMovies = ref<Movie[]>([])
+const activeHeroIndex = ref(0)
+let carouselTimer: ReturnType<typeof setInterval> | null = null
+
+const startCarousel = () => {
+  stopCarousel()
+  carouselTimer = setInterval(() => {
+    if (heroMovies.value.length > 1) {
+      activeHeroIndex.value = (activeHeroIndex.value + 1) % heroMovies.value.length
+    }
+  }, 5000)
+}
+
+const stopCarousel = () => {
+  if (carouselTimer) {
+    clearInterval(carouselTimer)
+    carouselTimer = null
+  }
+}
+
+const goToSlide = (index: number) => {
+  activeHeroIndex.value = index
+  startCarousel()
+}
+
+onBeforeUnmount(() => {
+  stopCarousel()
+})
+
+const countries = [
+  { slug: 'han-quoc', name: 'Hàn Quốc' },
+  { slug: 'nhat-ban', name: 'Nhật Bản' },
+  { slug: 'trung-quoc', name: 'Trung Quốc' },
+  { slug: 'thai-lan', name: 'Thái Lan' },
+  { slug: 'au-my', name: 'Âu Mỹ' },
+  { slug: 'dai-loan', name: 'Đài Loan' },
+  { slug: 'hong-kong', name: 'Hồng Kông' },
+  { slug: 'an-do', name: 'Ấn Độ' },
+]
 
 const activeCategory = ref('all')
 const activeCountry = ref('')
@@ -89,9 +124,10 @@ onMounted(async () => {
     singleMovies.value = single.items
     animeMovies.value = anime.items
 
-    // Use the first recent movie as hero
+    // Use the first 5 recent movies for hero carousel
     if (recent.items.length > 0) {
-      heroMovie.value = recent.items[0]
+      heroMovies.value = recent.items.slice(0, 5)
+      startCarousel()
     }
   } catch (error) {
     console.error('Failed to fetch movies:', error)
@@ -103,39 +139,56 @@ onMounted(async () => {
 
 <template>
   <div class="home-page">
-    <!-- Hero Section -->
-    <section v-if="heroMovie" class="hero-section">
-      <div class="hero-bg" :style="{ backgroundImage: `url(${getImageUrl(heroMovie.thumb_url)})` }"></div>
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <div class="hero-badge">
-          <span class="hero-badge-text">N&#7892;I B&#7852;T</span>
+    <!-- Hero Carousel -->
+    <section v-if="heroMovies.length" class="hero-section">
+      <div class="hero-slides">
+        <div
+          v-for="(slide, index) in heroMovies"
+          :key="slide._id"
+          :class="['hero-slide', { active: activeHeroIndex === index }]"
+        >
+          <div class="hero-bg" :style="{ backgroundImage: `url(${getImageUrl(slide.thumb_url)})` }"></div>
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <div class="hero-badge">
+              <span class="hero-badge-text">N&#7892;I B&#7852;T</span>
+            </div>
+            <h1 class="hero-title">{{ slide.name }}</h1>
+            <div class="hero-meta">
+              <span v-if="slide.year" class="hero-year">{{ slide.year }}</span>
+              <span v-if="slide.time" class="hero-dot"></span>
+              <span v-if="slide.time" class="hero-duration">{{ slide.time }}</span>
+              <span v-if="slide.quality" class="hero-dot"></span>
+              <span v-if="slide.quality" class="hero-rating">{{ slide.quality }}</span>
+            </div>
+            <p v-if="slide.origin_name" class="hero-desc">{{ slide.origin_name }}</p>
+            <div class="hero-ctas">
+              <router-link :to="`/xem-phim/${slide.slug}`" class="btn btn-primary hero-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                Xem Phim
+              </router-link>
+              <router-link :to="`/phim/${slide.slug}`" class="btn btn-secondary hero-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 16v-4"/>
+                  <path d="M12 8h.01"/>
+                </svg>
+                Chi Ti&#7871;t
+              </router-link>
+            </div>
+          </div>
         </div>
-        <h1 class="hero-title">{{ heroMovie.name }}</h1>
-        <div class="hero-meta">
-          <span v-if="heroMovie.year" class="hero-year">{{ heroMovie.year }}</span>
-          <span v-if="heroMovie.time" class="hero-dot"></span>
-          <span v-if="heroMovie.time" class="hero-duration">{{ heroMovie.time }}</span>
-          <span v-if="heroMovie.quality" class="hero-dot"></span>
-          <span v-if="heroMovie.quality" class="hero-rating">{{ heroMovie.quality }}</span>
-        </div>
-        <p v-if="heroMovie.origin_name" class="hero-desc">{{ heroMovie.origin_name }}</p>
-        <div class="hero-ctas">
-          <router-link :to="`/xem-phim/${heroMovie.slug}`" class="btn btn-primary hero-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-            Xem Phim
-          </router-link>
-          <router-link :to="`/phim/${heroMovie.slug}`" class="btn btn-secondary hero-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 16v-4"/>
-              <path d="M12 8h.01"/>
-            </svg>
-            Chi Ti&#7871;t
-          </router-link>
-        </div>
+      </div>
+      <!-- Carousel Dots -->
+      <div class="hero-dots">
+        <button
+          v-for="(_slide, index) in heroMovies"
+          :key="index"
+          :class="['hero-dot-btn', { active: activeHeroIndex === index }]"
+          @click="goToSlide(index)"
+        ></button>
       </div>
     </section>
 
@@ -158,7 +211,7 @@ onMounted(async () => {
           >T&#7845;t c&#7843;</button>
           <button
             v-for="country in countries"
-            :key="country._id"
+            :key="country.slug"
             :class="['tab-btn', { active: activeCountry === country.slug }]"
             @click="activeCountry = country.slug"
           >{{ country.name }}</button>
@@ -228,11 +281,30 @@ onMounted(async () => {
   background: #0A0A0A;
 }
 
-/* Hero Section */
+/* Hero Carousel */
 .hero-section {
   position: relative;
   height: 600px;
   overflow: hidden;
+}
+
+.hero-slides {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .hero-bg {
@@ -262,6 +334,37 @@ onMounted(async () => {
   gap: 24px;
   max-width: 600px;
   z-index: 1;
+}
+
+.hero-dots {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 2;
+}
+
+.hero-dot-btn {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.hero-dot-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.hero-dot-btn.active {
+  background: #E50914;
+  width: 28px;
+  border-radius: 5px;
 }
 
 .hero-badge {

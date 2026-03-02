@@ -210,11 +210,16 @@ watch(currentEpisode, () => {
 <style scoped>
 .watch-page {
   background: #0A0A0A;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Video Player */
 .video-player {
   background: #000000;
+  width: 100%;
+  overflow: hidden;
 }
 
 .player-wrapper {
@@ -223,6 +228,7 @@ watch(currentEpisode, () => {
   max-width: 1440px;
   margin: 0 auto;
   aspect-ratio: 16/9;
+  overflow: hidden;
 }
 
 .player-wrapper iframe {
@@ -231,12 +237,6 @@ watch(currentEpisode, () => {
   left: 0;
   width: 100%;
   height: 100%;
-}
-
-.player-placeholder {
-  position: absolute;
-  inset: 0;
-  background: transparent;
 }
 
 .no-player {
@@ -256,10 +256,13 @@ watch(currentEpisode, () => {
   gap: 32px;
   padding: 32px;
   background: #0A0A0A;
+  width: 100%;
+  overflow: hidden;
 }
 
 .movie-info-col {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -335,6 +338,7 @@ watch(currentEpisode, () => {
 .sidebar {
   width: 380px;
   flex-shrink: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -388,6 +392,7 @@ watch(currentEpisode, () => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  max-width: 100%;
 }
 
 .episode-btn {
@@ -419,6 +424,8 @@ watch(currentEpisode, () => {
 .related-section {
   padding: 32px;
   background: #0A0A0A;
+  width: 100%;
+  overflow: hidden;
 }
 
 .related-title {
@@ -443,6 +450,7 @@ watch(currentEpisode, () => {
 
   .sidebar {
     width: 100%;
+    min-width: 0;
   }
 
   .related-section {
