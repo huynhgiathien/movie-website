@@ -78,12 +78,14 @@ export const movieApi = {
       page = 1,
       sort_field = 'modified.time',
       sort_type = 'desc',
+      country = '',
       limit = 24
     } = params
 
-    const response = await api.get<ApiResponse<MovieListResponse>>(
-      `/v1/api/the-loai/${slug}?page=${page}&sort_field=${sort_field}&sort_type=${sort_type}&limit=${limit}`
-    )
+    let url = `/v1/api/the-loai/${slug}?page=${page}&sort_field=${sort_field}&sort_type=${sort_type}&limit=${limit}`
+    if (country) url += `&country=${country}`
+
+    const response = await api.get<ApiResponse<MovieListResponse>>(url)
     return response.data.data
   },
 
@@ -97,12 +99,14 @@ export const movieApi = {
       page = 1,
       sort_field = 'modified.time',
       sort_type = 'desc',
+      category = '',
       limit = 24
     } = params
 
-    const response = await api.get<ApiResponse<MovieListResponse>>(
-      `/v1/api/quoc-gia/${slug}?page=${page}&sort_field=${sort_field}&sort_type=${sort_type}&limit=${limit}`
-    )
+    let url = `/v1/api/quoc-gia/${slug}?page=${page}&sort_field=${sort_field}&sort_type=${sort_type}&limit=${limit}`
+    if (category) url += `&category=${category}`
+
+    const response = await api.get<ApiResponse<MovieListResponse>>(url)
     return response.data.data
   },
 

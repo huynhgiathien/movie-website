@@ -31,7 +31,7 @@ const search = async () => {
     const data = await movieApi.searchMovies(keyword, { page, limit: 24 })
     movies.value = data?.items ?? []
     totalPages.value = data?.params?.pagination?.totalPages ?? 1
-    document.title = `Tìm kiếm: ${keyword} - Free Movie`
+    document.title = `T\u00ECm ki\u1EBFm: ${keyword} - CINEWORLD`
   } catch (error) {
     console.error('Search failed:', error)
     movies.value = []
@@ -98,27 +98,20 @@ watch(() => [route.query.q, route.query.page], search)
 }
 
 .page-title {
+  font-family: 'Sora', sans-serif;
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 2rem;
-  letter-spacing: -0.02em;
-}
-
-.page-title span {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #FFFFFF;
 }
 
 .result-count {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.4);
   margin-bottom: 2rem;
-  font-size: 0.9rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  padding: 0.625rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
   display: inline-block;
-  border: 1px solid var(--border-color);
 }
 </style>

@@ -33,7 +33,7 @@ const fetchMovies = async () => {
     totalPages.value = data.params.pagination.totalPages
 
     const genreName = currentGenre.value?.name || slug
-    document.title = `Phim ${genreName} - Free Movie`
+    document.title = `Phim ${genreName} - CINEWORLD`
   } catch (error) {
     console.error('Failed to fetch movies:', error)
   } finally {
@@ -85,20 +85,21 @@ watch(() => [route.params.slug, route.query.page], fetchMovies)
 }
 
 .page-title {
-  font-size: 2rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  letter-spacing: -0.02em;
 }
 
 .page-title::before {
   content: '';
   width: 4px;
-  height: 32px;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-full);
+  height: 28px;
+  background: #E50914;
+  border-radius: 2px;
 }
 </style>

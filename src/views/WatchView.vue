@@ -3,7 +3,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { movieApi } from '@/api'
-import type { MovieDetail, EpisodeData } from '@/types'
+import MovieCard from '@/components/MovieCard.vue'
+import type { MovieDetail, EpisodeData, Movie } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +15,7 @@ const loading = ref(true)
 const error = ref('')
 const currentServer = ref(0)
 const currentEpisode = ref<EpisodeData | null>(null)
+const relatedMovies = ref<Movie[]>([])
 
 const episodes = computed(() => {
   if (!movie.value?.episodes?.length) return []
@@ -25,13 +27,8 @@ const servers = computed(() => {
   return movie.value.episodes.map((s, i) => ({ name: s.server_name, index: i }))
 })
 
-// Check if global player is showing this movie
-const globalPlayer = computed(() => store.state.miniPlayer)
-const isUsingGlobalPlayer = computed(() => {
-  return globalPlayer.value.isActive &&
-         globalPlayer.value.movieSlug === movie.value?.slug &&
-         globalPlayer.value.videoUrl === currentEpisode.value?.link_embed
-})
+// GlobalPlayer is only used when minimized (navigated away).
+// On this page we always render the iframe directly in the flow.
 
 const updateGlobalPlayer = () => {
   if (movie.value && currentEpisode.value?.link_embed) {
@@ -66,12 +63,18 @@ const fetchMovie = async () => {
       }
     }
 
-    document.title = `Xem ${movie.value.name} - Free Movie`
-
-    // Update global player state
+    document.title = `Xem ${movie.value.name} - CINEWORLD`
     updateGlobalPlayer()
+
+    // Fetch related movies
+    try {
+      const recent = await movieApi.getRecentMovies(1)
+      relatedMovies.value = recent.items.slice(0, 4)
+    } catch {
+      // ignore
+    }
   } catch (err) {
-    error.value = 'Không thể tải phim'
+    error.value = 'Kh\u00F4ng th\u1EC3 t\u1EA3i phim'
     console.error('Failed to fetch movie:', err)
   } finally {
     loading.value = false
@@ -82,8 +85,6 @@ const selectEpisode = (ep: EpisodeData) => {
   currentEpisode.value = ep
   router.replace({ query: { tap: ep.slug } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
-
-  // Update global player with new episode
   updateGlobalPlayer()
 }
 
@@ -95,8 +96,6 @@ const selectServer = (index: number) => {
   }
 }
 
-const getImageUrl = (url: string | null) => movieApi.getImageUrl(url)
-
 onMounted(() => {
   fetchMovie()
 })
@@ -105,7 +104,6 @@ watch(() => route.params.slug, () => {
   fetchMovie()
 })
 
-// Watch for episode changes
 watch(currentEpisode, () => {
   updateGlobalPlayer()
 })
@@ -113,111 +111,118 @@ watch(currentEpisode, () => {
 
 <template>
   <div class="watch-page">
-    <div v-if="loading" class="loading-spinner"></div>
+    <div v-if="loading" class="loading-spinner" style="min-height: 60vh;"></div>
 
     <div v-else-if="error" class="container">
       <div class="error-message">{{ error }}</div>
     </div>
 
     <template v-else-if="movie">
-      <!-- Player Container - space reserved for global player -->
-      <div class="player-container">
+      <!-- Video Player (always rendered directly in flow, not fixed) -->
+      <section class="video-player">
         <div class="player-wrapper">
-          <!-- Show placeholder when global player is active, otherwise show local iframe -->
-          <div v-if="isUsingGlobalPlayer" class="player-placeholder">
-            <!-- Global player will position itself here -->
-          </div>
           <iframe
-            v-else-if="currentEpisode?.link_embed"
+            v-if="currentEpisode?.link_embed"
             :src="currentEpisode.link_embed"
             frameborder="0"
             allowfullscreen
             allow="autoplay; encrypted-media"
           ></iframe>
           <div v-else class="no-player">
-            <p>Không có nguồn phát cho tập này</p>
+            <p>Kh&ocirc;ng c&oacute; ngu&#7891;n ph&aacute;t cho t&#7853;p n&agrave;y</p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="container">
-        <div class="watch-info">
-          <div class="movie-header">
-            <img :src="getImageUrl(movie.poster_url)" :alt="movie.name" class="movie-thumb" />
-            <div class="movie-meta">
-              <h1 class="movie-title">{{ movie.name }}</h1>
-              <p class="movie-origin">{{ movie.origin_name }}</p>
-              <p v-if="currentEpisode" class="current-episode">
-                Đang xem: <strong>{{ currentEpisode.name }}</strong>
-              </p>
-              <router-link :to="`/phim/${movie.slug}`" class="btn btn-secondary">
-                Xem chi tiết phim
-              </router-link>
+      <!-- Below Player -->
+      <section class="below-player">
+        <!-- Movie Info (left) -->
+        <div class="movie-info-col">
+          <div class="movie-info-row">
+            <h1 class="movie-name">{{ movie.name }}</h1>
+            <div class="movie-meta-row">
+              <span v-if="movie.year" class="meta-text">{{ movie.year }}</span>
+              <span v-if="movie.time" class="meta-dot"></span>
+              <span v-if="movie.time" class="meta-text">{{ movie.time }}</span>
+              <span v-if="movie.quality" class="meta-dot"></span>
+              <span v-if="movie.quality" class="meta-quality">{{ movie.quality }}</span>
             </div>
+            <p v-if="currentEpisode" class="current-ep">
+              &#272;ang xem: <strong>{{ currentEpisode.name }}</strong>
+            </p>
           </div>
 
-          <div v-if="servers.length > 1" class="server-selector">
-            <h3>Chọn Server:</h3>
+          <p class="movie-desc" v-if="movie.origin_name">{{ movie.origin_name }}</p>
+
+          <div class="movie-actions">
+            <router-link :to="`/phim/${movie.slug}`" class="btn btn-secondary action-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4"/>
+                <path d="M12 8h.01"/>
+              </svg>
+              Chi ti&#7871;t
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Sidebar (right) -->
+        <div class="sidebar">
+          <!-- Server Section -->
+          <div v-if="servers.length > 1" class="sidebar-block">
+            <h3 class="sidebar-title">Server</h3>
             <div class="server-list">
               <button
                 v-for="server in servers"
                 :key="server.index"
                 :class="['server-btn', { active: currentServer === server.index }]"
                 @click="selectServer(server.index)"
-              >
-                {{ server.name }}
-              </button>
+              >{{ server.name }}</button>
             </div>
           </div>
 
-          <div v-if="episodes.length" class="episode-selector">
-            <h3>Danh sách tập:</h3>
+          <!-- Episode Section -->
+          <div v-if="episodes.length" class="sidebar-block">
+            <h3 class="sidebar-title">Danh s&aacute;ch t&#7853;p</h3>
             <div class="episode-grid">
               <button
                 v-for="ep in episodes"
                 :key="ep.slug"
                 :class="['episode-btn', { active: currentEpisode?.slug === ep.slug }]"
                 @click="selectEpisode(ep)"
-              >
-                {{ ep.name }}
-              </button>
+              >{{ ep.name }}</button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- Related Movies -->
+      <section v-if="relatedMovies.length" class="related-section">
+        <h2 class="related-title">Phim &#273;&#7873; xu&#7845;t</h2>
+        <div class="related-grid">
+          <MovieCard v-for="m in relatedMovies" :key="m._id" :movie="m" />
+        </div>
+      </section>
     </template>
   </div>
 </template>
 
 <style scoped>
 .watch-page {
-  padding-bottom: 3rem;
+  background: #0A0A0A;
 }
 
-.player-container {
-  background: #000;
-  margin-bottom: 2.5rem;
-  position: relative;
-}
-
-.player-container::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  background: linear-gradient(to top, var(--bg-color), transparent);
-  pointer-events: none;
+/* Video Player */
+.video-player {
+  background: #000000;
 }
 
 .player-wrapper {
   position: relative;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   aspect-ratio: 16/9;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 .player-wrapper iframe {
@@ -226,198 +231,244 @@ watch(currentEpisode, () => {
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 0;
-}
-
-.no-player {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-secondary);
-  color: var(--text-muted);
-  font-size: 1.1rem;
 }
 
 .player-placeholder {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: transparent;
 }
 
-.watch-info {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.movie-header {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 2.5rem;
-  padding: 1.75rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(12px);
-}
-
-.movie-thumb {
-  width: 130px;
-  height: auto;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-}
-
-.movie-meta {
-  flex: 1;
-}
-
-.movie-title {
-  font-size: 1.625rem;
-  font-weight: 700;
-  margin-bottom: 0.375rem;
-  letter-spacing: -0.02em;
-}
-
-.movie-origin {
-  color: var(--text-muted);
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
-}
-
-.current-episode {
-  margin-bottom: 1.25rem;
-  padding: 0.625rem 1rem;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: var(--radius-md);
-  display: inline-block;
-  font-size: 0.9rem;
-}
-
-.current-episode strong {
-  color: var(--primary-color);
-}
-
-.server-selector,
-.episode-selector {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(12px);
-}
-
-.server-selector h3,
-.episode-selector h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 1.25rem;
-  color: var(--text-color);
+.no-player {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  background: #111;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
 }
 
-.server-selector h3::before,
-.episode-selector h3::before {
-  content: '';
-  width: 3px;
-  height: 16px;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-full);
+/* Below Player */
+.below-player {
+  display: flex;
+  gap: 32px;
+  padding: 32px;
+  background: #0A0A0A;
+}
+
+.movie-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.movie-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.movie-name {
+  font-family: 'Sora', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.movie-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meta-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.meta-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.meta-quality {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFD700;
+}
+
+.current-ep {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.current-ep strong {
+  color: #E50914;
+}
+
+.movie-desc {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.53);
+  line-height: 1.7;
+}
+
+.movie-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 380px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .server-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.625rem;
+  gap: 8px;
 }
 
 .server-btn {
-  padding: 0.625rem 1.5rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
   font-weight: 500;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
   transition: var(--transition);
 }
 
 .server-btn:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
 .server-btn.active {
-  background: var(--gradient-primary);
-  border-color: transparent;
-  box-shadow: 0 0 20px var(--primary-glow);
+  background: #E50914;
+  border-color: #E50914;
+  color: #FFFFFF;
 }
 
 .episode-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.625rem;
+  gap: 8px;
 }
 
 .episode-btn {
-  padding: 0.625rem 1.25rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
   font-weight: 500;
-  min-width: 70px;
+  padding: 8px 14px;
+  min-width: 50px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
   transition: var(--transition);
 }
 
 .episode-btn:hover {
-  border-color: var(--primary-color);
-  background: rgba(99, 102, 241, 0.1);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
 .episode-btn.active {
-  background: var(--gradient-primary);
-  border-color: transparent;
-  box-shadow: 0 0 20px var(--primary-glow);
+  background: #E50914;
+  border-color: #E50914;
+  color: #FFFFFF;
+}
+
+/* Related Movies */
+.related-section {
+  padding: 32px;
+  background: #0A0A0A;
+}
+
+.related-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 20px;
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .below-player {
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .related-section {
+    padding: 24px;
+  }
+
+  .related-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-  .movie-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1.5rem;
+  .below-player {
+    padding: 16px;
   }
 
-  .movie-thumb {
-    width: 110px;
+  .movie-name {
+    font-size: 20px;
   }
 
-  .movie-title {
-    font-size: 1.375rem;
+  .related-section {
+    padding: 16px;
   }
 
-  .current-episode {
-    display: block;
-    text-align: center;
-  }
-
-  .server-selector,
-  .episode-selector {
-    padding: 1.25rem;
+  .related-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

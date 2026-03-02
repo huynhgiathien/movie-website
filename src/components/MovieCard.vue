@@ -12,6 +12,13 @@ const posterUrl = computed(() => {
 })
 
 const movieUrl = computed(() => `/phim/${props.movie.slug}`)
+
+const genre = computed(() => {
+  if (props.movie.category && props.movie.category.length > 0) {
+    return props.movie.category[0].name
+  }
+  return ''
+})
 </script>
 
 <template>
@@ -24,23 +31,27 @@ const movieUrl = computed(() => `/phim/${props.movie.slug}`)
         @error="($event.target as HTMLImageElement).src = '/placeholder.svg'"
       />
       <div class="movie-overlay">
-        <button class="play-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+        <!-- Rating Badge -->
+        <div v-if="movie.quality" class="rating-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span>{{ movie.quality }}</span>
+        </div>
+        <!-- Play Button -->
+        <div class="play-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"/>
           </svg>
-        </button>
-      </div>
-      <div class="movie-badges">
-        <span v-if="movie.quality" class="badge badge-quality">{{ movie.quality }}</span>
-        <span v-if="movie.lang" class="badge badge-lang">{{ movie.lang }}</span>
+        </div>
       </div>
       <span v-if="movie.episode_current" class="episode-badge">{{ movie.episode_current }}</span>
     </div>
     <div class="movie-info">
       <h3 class="movie-title">{{ movie.name }}</h3>
-      <p class="movie-origin">{{ movie.origin_name }}</p>
       <div class="movie-meta">
-        <span v-if="movie.year">{{ movie.year }}</span>
+        <span v-if="movie.year" class="meta-year">{{ movie.year }}</span>
+        <span v-if="genre" class="meta-genre">{{ genre }}</span>
       </div>
     </div>
   </router-link>
@@ -48,45 +59,22 @@ const movieUrl = computed(() => `/phim/${props.movie.slug}`)
 
 <style scoped>
 .movie-card {
-  display: block;
-  background: var(--gradient-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: var(--transition);
-  border: 1px solid var(--border-color);
-  position: relative;
-}
-
-.movie-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-lg);
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   transition: var(--transition);
 }
 
 .movie-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: var(--shadow-lg), 0 0 40px rgba(99, 102, 241, 0.15);
-  border-color: var(--glass-border);
-}
-
-.movie-card:hover::before {
-  opacity: 1;
+  color: inherit;
 }
 
 .movie-poster {
   position: relative;
-  aspect-ratio: 2/3;
+  border-radius: 8px;
   overflow: hidden;
+  background: #1A1A1A;
+  aspect-ratio: 2/3;
 }
 
 .movie-poster img {
@@ -97,16 +85,16 @@ const movieUrl = computed(() => `/phim/${props.movie.slug}`)
 }
 
 .movie-card:hover .movie-poster img {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .movie-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(10, 10, 15, 0.95) 0%, rgba(10, 10, 15, 0.4) 50%, transparent 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 50%);
   opacity: 0;
   transition: var(--transition);
 }
@@ -115,92 +103,83 @@ const movieUrl = computed(() => `/phim/${props.movie.slug}`)
   opacity: 1;
 }
 
+.rating-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFD700;
+}
+
 .play-btn {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: var(--gradient-primary);
+  background: rgba(229, 9, 20, 0.6);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: var(--transition);
-  box-shadow: 0 0 30px var(--primary-glow);
   transform: scale(0.8);
 }
 
 .movie-card:hover .play-btn {
   transform: scale(1);
-}
-
-.play-btn:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 40px var(--primary-glow);
-}
-
-.movie-badges {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 2;
+  background: rgba(229, 9, 20, 0.8);
 }
 
 .episode-badge {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  padding: 0.375rem 0.625rem;
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px);
-  color: var(--accent-color);
-  font-size: 0.7rem;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #FFFFFF;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
   font-weight: 700;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border-radius: 4px;
   z-index: 2;
 }
 
 .movie-info {
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px;
 }
 
 .movie-title {
-  font-size: 0.9rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
   font-weight: 600;
+  color: rgba(255, 255, 255, 0.93);
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin-bottom: 0.375rem;
-  letter-spacing: -0.01em;
-}
-
-.movie-origin {
-  font-size: 0.8rem;
-  color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 0.5rem;
 }
 
 .movie-meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 500;
+  gap: 8px;
 }
 
-.movie-meta span {
-  padding: 0.25rem 0.5rem;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-sm);
+.meta-year,
+.meta-genre {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
 }
 </style>

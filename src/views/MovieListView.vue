@@ -38,7 +38,7 @@ const fetchMovies = async () => {
     const data = await movieApi.getMovieList(type, { page, limit: 24 })
     movies.value = data.items
     totalPages.value = data.params.pagination.totalPages
-    document.title = `${titleMap[type]} - Free Movie`
+    document.title = `${titleMap[type]} - CINEWORLD`
   } catch (error) {
     console.error('Failed to fetch movies:', error)
   } finally {
@@ -88,20 +88,21 @@ watch(() => [route.path, route.query.page], fetchMovies)
 }
 
 .page-title {
-  font-size: 2rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  letter-spacing: -0.02em;
 }
 
 .page-title::before {
   content: '';
   width: 4px;
-  height: 32px;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-full);
+  height: 28px;
+  background: #E50914;
+  border-radius: 2px;
 }
 </style>

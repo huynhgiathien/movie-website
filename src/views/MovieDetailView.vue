@@ -16,9 +16,9 @@ const fetchMovie = async () => {
   try {
     const slug = route.params.slug as string
     movie.value = await movieApi.getMovieDetail(slug)
-    document.title = `${movie.value.name} - Free Movie`
+    document.title = `${movie.value.name} - CINEWORLD`
   } catch (err) {
-    error.value = 'Không thể tải thông tin phim'
+    error.value = 'Kh\u00F4ng th\u1EC3 t\u1EA3i th\u00F4ng tin phim'
     console.error('Failed to fetch movie:', err)
   } finally {
     loading.value = false
@@ -32,91 +32,53 @@ watch(() => route.params.slug, fetchMovie)
 </script>
 
 <template>
-  <div class="movie-detail-page">
-    <div v-if="loading" class="loading-spinner"></div>
+  <div class="detail-page">
+    <div v-if="loading" class="loading-spinner" style="min-height: 60vh;"></div>
 
     <div v-else-if="error" class="container">
       <div class="error-message">{{ error }}</div>
     </div>
 
     <template v-else-if="movie">
-      <div class="movie-backdrop" :style="{ backgroundImage: `url(${getImageUrl(movie.thumb_url)})` }">
-        <div class="backdrop-overlay"></div>
-      </div>
-
-      <div class="container">
-        <div class="movie-content">
+      <!-- Detail Hero -->
+      <section class="detail-hero">
+        <div class="hero-backdrop" :style="{ backgroundImage: `url(${getImageUrl(movie.thumb_url)})` }"></div>
+        <div class="hero-overlay"></div>
+        <div class="detail-content">
+          <!-- Poster -->
           <div class="movie-poster">
             <img :src="getImageUrl(movie.poster_url)" :alt="movie.name" />
           </div>
-
+          <!-- Movie Info -->
           <div class="movie-info">
             <h1 class="movie-title">{{ movie.name }}</h1>
-            <p class="movie-origin-name">{{ movie.origin_name }}</p>
+            <p class="movie-origin">{{ movie.origin_name }}</p>
 
             <div class="movie-meta">
-              <span v-if="movie.year" class="meta-item">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                {{ movie.year }}
-              </span>
-              <span v-if="movie.time" class="meta-item">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                </svg>
-                {{ movie.time }}
-              </span>
-              <span v-if="movie.quality" class="badge badge-quality">{{ movie.quality }}</span>
-              <span v-if="movie.lang" class="badge badge-lang">{{ movie.lang }}</span>
+              <span v-if="movie.year" class="meta-item">{{ movie.year }}</span>
+              <span class="meta-dot" v-if="movie.year && movie.time"></span>
+              <span v-if="movie.time" class="meta-item">{{ movie.time }}</span>
+              <span class="meta-dot" v-if="movie.time && movie.quality"></span>
+              <span v-if="movie.quality" class="meta-quality">{{ movie.quality }}</span>
+              <span v-if="movie.lang" class="meta-lang">{{ movie.lang }}</span>
             </div>
 
-            <div class="movie-tags">
-              <span class="tag-label">Thể loại:</span>
+            <div class="movie-genres" v-if="movie.category?.length">
               <router-link
                 v-for="cat in movie.category"
                 :key="cat.id"
                 :to="`/the-loai/${cat.slug}`"
-                class="tag"
-              >
-                {{ cat.name }}
-              </router-link>
-            </div>
-
-            <div class="movie-tags">
-              <span class="tag-label">Quốc gia:</span>
-              <router-link
-                v-for="country in movie.country"
-                :key="country.id"
-                :to="`/quoc-gia/${country.slug}`"
-                class="tag"
-              >
-                {{ country.name }}
-              </router-link>
-            </div>
-
-            <div v-if="movie.director?.length" class="movie-tags">
-              <span class="tag-label">Đạo diễn:</span>
-              <span class="tag-text">{{ movie.director.join(', ') }}</span>
-            </div>
-
-            <div v-if="movie.actor?.length" class="movie-tags">
-              <span class="tag-label">Diễn viên:</span>
-              <span class="tag-text">{{ movie.actor.slice(0, 5).join(', ') }}</span>
-            </div>
-
-            <div class="movie-status">
-              <span>Trạng thái: {{ movie.status }}</span>
-              <span v-if="movie.episode_current">{{ movie.episode_current }}</span>
+                class="genre-tag"
+              >{{ cat.name }}</router-link>
             </div>
 
             <div class="movie-actions">
               <router-link
                 v-if="movie.episodes?.length && movie.episodes[0]?.server_data?.length"
                 :to="`/xem-phim/${movie.slug}`"
-                class="btn btn-primary"
+                class="btn btn-primary action-btn"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
                 Xem Phim
@@ -125,278 +87,433 @@ watch(() => route.params.slug, fetchMovie)
                 v-if="movie.trailer_url"
                 :href="movie.trailer_url"
                 target="_blank"
-                class="btn btn-secondary"
+                class="btn btn-secondary action-btn"
               >
-                Xem Trailer
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m15 10-4 4V6l4 4z"/>
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                </svg>
+                Trailer
               </a>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="movie-description">
-          <h2 class="section-title">Nội Dung Phim</h2>
-          <div class="description-content" v-html="movie.content"></div>
-        </div>
+      <!-- Info Section -->
+      <section class="info-section">
+        <div class="info-left">
+          <!-- Movie Details -->
+          <div class="detail-block">
+            <h2 class="block-title">N&#7897;i Dung Phim</h2>
+            <div class="description" v-html="movie.content"></div>
 
-        <div v-if="movie.episodes?.length" class="movie-episodes">
-          <h2 class="section-title">Danh Sách Tập</h2>
-          <div v-for="server in movie.episodes" :key="server.server_name" class="server-group">
-            <h3 class="server-name">{{ server.server_name }}</h3>
-            <div class="episode-list">
-              <router-link
-                v-for="ep in server.server_data"
-                :key="ep.slug"
-                :to="`/xem-phim/${movie.slug}?tap=${ep.slug}`"
-                class="episode-btn"
-              >
-                {{ ep.name }}
-              </router-link>
+            <div class="detail-grid">
+              <div v-if="movie.director?.length" class="detail-row">
+                <span class="detail-label">&#272;&#7841;o di&#7877;n</span>
+                <span class="detail-value">{{ movie.director.join(', ') }}</span>
+              </div>
+              <div v-if="movie.country?.length" class="detail-row">
+                <span class="detail-label">Qu&#7889;c gia</span>
+                <span class="detail-value">
+                  <router-link v-for="(c, i) in movie.country" :key="c.id" :to="`/quoc-gia/${c.slug}`">
+                    {{ c.name }}<span v-if="i < movie.country.length - 1">, </span>
+                  </router-link>
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Tr&#7841;ng th&aacute;i</span>
+                <span class="detail-value">{{ movie.status }} <span v-if="movie.episode_current">- {{ movie.episode_current }}</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cast Section -->
+          <div v-if="movie.actor?.length" class="detail-block">
+            <h2 class="block-title">Di&#7877;n Vi&ecirc;n</h2>
+            <div class="cast-grid">
+              <div v-for="actor in movie.actor.slice(0, 8)" :key="actor" class="cast-item">
+                <div class="cast-avatar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <span class="cast-name">{{ actor }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Episodes -->
+          <div v-if="movie.episodes?.length" class="detail-block">
+            <h2 class="block-title">Danh S&aacute;ch T&#7853;p</h2>
+            <div v-for="server in movie.episodes" :key="server.server_name" class="server-group">
+              <h3 class="server-name">{{ server.server_name }}</h3>
+              <div class="episode-list">
+                <router-link
+                  v-for="ep in server.server_data"
+                  :key="ep.slug"
+                  :to="`/xem-phim/${movie.slug}?tap=${ep.slug}`"
+                  class="episode-btn"
+                >{{ ep.name }}</router-link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </template>
   </div>
 </template>
 
 <style scoped>
-.movie-detail-page {
-  position: relative;
+.detail-page {
+  background: #0A0A0A;
   min-height: calc(100vh - 72px);
 }
 
-.movie-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 550px;
-  background-size: cover;
-  background-position: center top;
-  z-index: 0;
+/* Detail Hero */
+.detail-hero {
+  position: relative;
+  height: 560px;
+  overflow: hidden;
 }
 
-.backdrop-overlay {
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+}
+
+.hero-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(10, 10, 15, 0.5) 0%,
-    rgba(10, 10, 15, 0.8) 50%,
-    var(--bg-color) 100%
+    rgba(10, 10, 10, 1) 0%,
+    rgba(10, 10, 10, 0.53) 40%,
+    rgba(10, 10, 10, 0.8) 70%,
+    rgba(10, 10, 10, 1) 100%
   );
-  backdrop-filter: blur(2px);
 }
 
-.container {
-  position: relative;
-  z-index: 1;
-  padding-top: 2rem;
-  padding-bottom: 3rem;
-}
-
-.movie-content {
+.detail-content {
+  position: absolute;
+  left: 56px;
+  top: 100px;
   display: flex;
-  gap: 3rem;
-  margin-bottom: 4rem;
+  gap: 40px;
+  z-index: 1;
 }
 
 .movie-poster {
   flex-shrink: 0;
-  width: 320px;
-  border-radius: var(--radius-xl);
+  width: 280px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: var(--shadow-lg), 0 0 60px rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--glass-border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .movie-poster img {
   width: 100%;
-  height: auto;
+  height: 400px;
+  object-fit: cover;
 }
 
 .movie-info {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 700px;
+  padding-top: 20px;
 }
 
 .movie-title {
-  font-size: 2.5rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 36px;
   font-weight: 800;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  color: #FFFFFF;
+  line-height: 1.1;
+  letter-spacing: -1px;
 }
 
-.movie-origin-name {
-  font-size: 1.125rem;
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
+.movie-origin {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: -12px;
 }
 
 .movie-meta {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.75rem;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .meta-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  padding: 0.5rem 1rem;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-full);
-  font-size: 0.875rem;
-  border: 1px solid var(--border-color);
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
-.movie-tags {
+.meta-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.meta-quality {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFD700;
+  padding: 3px 8px;
+  background: rgba(255, 215, 0, 0.15);
+  border-radius: 4px;
+}
+
+.meta-lang {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #E50914;
+  padding: 3px 8px;
+  background: rgba(229, 9, 20, 0.15);
+  border-radius: 4px;
+}
+
+.movie-genres {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 8px;
 }
 
-.tag-label {
-  color: var(--text-muted);
-  font-size: 0.875rem;
+.genre-tag {
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
   font-weight: 500;
-}
-
-.tag {
-  padding: 0.375rem 0.875rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
   transition: var(--transition);
 }
 
-.tag:hover {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
-  box-shadow: 0 0 20px var(--primary-glow);
-}
-
-.tag-text {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-}
-
-.movie-status {
-  display: flex;
-  gap: 1.5rem;
-  color: var(--text-secondary);
-  margin-bottom: 2rem;
-  padding: 1.25rem 1.5rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(12px);
-  font-size: 0.9rem;
+.genre-tag:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .movie-actions {
   display: flex;
-  gap: 1rem;
+  gap: 12px;
 }
 
-.movie-description {
-  margin-bottom: 4rem;
-  padding: 2rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(12px);
+.action-btn {
+  padding: 12px 24px;
+  font-size: 14px;
 }
 
-.description-content {
-  color: var(--text-secondary);
-  line-height: 1.9;
-  font-size: 0.95rem;
+/* Info Section */
+.info-section {
+  padding: 40px 56px;
+  display: flex;
+  gap: 48px;
 }
 
-.movie-episodes {
-  margin-bottom: 2rem;
+.info-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
+.detail-block {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.block-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.description :deep(p) {
+  margin-bottom: 12px;
+}
+
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.detail-row {
+  display: flex;
+  gap: 16px;
+}
+
+.detail-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  min-width: 100px;
+}
+
+.detail-value {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.detail-value a {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.detail-value a:hover {
+  color: #E50914;
+}
+
+/* Cast */
+.cast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.cast-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.cast-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.cast-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Server & Episodes */
 .server-group {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(12px);
+  margin-bottom: 16px;
 }
 
 .server-name {
-  font-size: 1rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 1.25rem;
-  color: var(--text-color);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.server-name::before {
-  content: '';
-  width: 3px;
-  height: 16px;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-full);
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 12px;
 }
 
 .episode-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.625rem;
+  gap: 8px;
 }
 
 .episode-btn {
-  padding: 0.625rem 1.25rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
   font-weight: 500;
-  transition: var(--transition);
-  min-width: 70px;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 60px;
   text-align: center;
+  transition: var(--transition);
 }
 
 .episode-btn:hover {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
-  box-shadow: 0 0 20px var(--primary-glow);
-  transform: translateY(-2px);
+  background: #E50914;
+  border-color: #E50914;
+  color: #FFFFFF;
+}
+
+@media (max-width: 1024px) {
+  .detail-content {
+    left: 24px;
+    right: 24px;
+  }
+
+  .info-section {
+    padding: 32px 24px;
+  }
 }
 
 @media (max-width: 768px) {
-  .movie-content {
+  .detail-hero {
+    height: auto;
+    min-height: 500px;
+    padding-bottom: 40px;
+  }
+
+  .detail-content {
+    position: relative;
+    left: auto;
+    top: auto;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 2rem;
+    padding: 100px 24px 0;
   }
 
   .movie-poster {
-    width: 220px;
+    width: 200px;
+  }
+
+  .movie-poster img {
+    height: 300px;
+  }
+
+  .movie-info {
+    align-items: center;
+    max-width: none;
+    padding-top: 0;
   }
 
   .movie-title {
-    font-size: 1.75rem;
+    font-size: 24px;
   }
 
-  .movie-meta,
-  .movie-tags {
+  .movie-meta {
+    justify-content: center;
+  }
+
+  .movie-genres {
     justify-content: center;
   }
 
@@ -405,9 +522,13 @@ watch(() => route.params.slug, fetchMovie)
     flex-wrap: wrap;
   }
 
-  .movie-description,
-  .server-group {
-    padding: 1.25rem;
+  .info-section {
+    flex-direction: column;
+    padding: 24px 16px;
+  }
+
+  .cast-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

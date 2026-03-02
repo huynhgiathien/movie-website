@@ -36,16 +36,13 @@
 }
 
 .error-code {
+  font-family: 'Sora', sans-serif;
   font-size: 10rem;
   font-weight: 800;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #E50914;
   line-height: 1;
   margin-bottom: 1.5rem;
   letter-spacing: -0.04em;
-  text-shadow: 0 0 80px var(--primary-glow);
 }
 
 .error-title {

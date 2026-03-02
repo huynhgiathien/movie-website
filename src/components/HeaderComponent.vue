@@ -36,37 +36,37 @@ const toggleMenu = () => {
 
 <template>
   <header class="header">
-    <div class="container header-container">
+    <div class="header-inner">
+      <!-- Logo Area -->
       <router-link to="/" class="logo">
-        <span class="logo-text">Free Movie</span>
+        <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+          <path d="m6.2 5.3 3.1 3.9"/>
+          <path d="m12.4 3.4 3.1 4"/>
+          <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+        </svg>
+        <span class="logo-text">CINEWORLD</span>
       </router-link>
 
+      <!-- Navigation -->
       <nav class="nav" :class="{ 'nav-open': isMenuOpen }">
         <ul class="nav-list">
           <li class="nav-item">
-            <router-link to="/" class="nav-link" @click="isMenuOpen = false">Trang Chủ</router-link>
+            <router-link to="/" class="nav-link nav-link--active" @click="isMenuOpen = false">Trang ch&#7911;</router-link>
           </li>
           <li class="nav-item dropdown">
-            <span class="nav-link">Phim</span>
+            <router-link to="/phim-le" class="nav-link" @click="isMenuOpen = false">Phim l&#7867;</router-link>
             <ul class="dropdown-menu">
-              <li><router-link to="/phim-bo" @click="isMenuOpen = false">Phim Bộ</router-link></li>
-              <li><router-link to="/phim-le" @click="isMenuOpen = false">Phim Lẻ</router-link></li>
-              <li><router-link to="/hoat-hinh" @click="isMenuOpen = false">Hoạt Hình</router-link></li>
+              <li><router-link to="/phim-le" @click="isMenuOpen = false">Phim L&#7867;</router-link></li>
+              <li><router-link to="/hoat-hinh" @click="isMenuOpen = false">Ho&#7841;t H&igrave;nh</router-link></li>
               <li><router-link to="/tv-shows" @click="isMenuOpen = false">TV Shows</router-link></li>
             </ul>
           </li>
           <li class="nav-item dropdown">
-            <span class="nav-link">Thể Loại</span>
-            <ul class="dropdown-menu dropdown-grid">
-              <li v-for="genre in genres" :key="genre._id">
-                <router-link :to="`/the-loai/${genre.slug}`" @click="isMenuOpen = false">
-                  {{ genre.name }}
-                </router-link>
-              </li>
-            </ul>
+            <router-link to="/phim-bo" class="nav-link" @click="isMenuOpen = false">Phim b&#7897;</router-link>
           </li>
           <li class="nav-item dropdown">
-            <span class="nav-link">Quốc Gia</span>
+            <span class="nav-link">Qu&#7889;c gia</span>
             <ul class="dropdown-menu dropdown-grid">
               <li v-for="country in countries" :key="country._id">
                 <router-link :to="`/quoc-gia/${country.slug}`" @click="isMenuOpen = false">
@@ -75,38 +75,47 @@ const toggleMenu = () => {
               </li>
             </ul>
           </li>
+          <li class="nav-item dropdown">
+            <span class="nav-link">Th&#7875; lo&#7841;i</span>
+            <ul class="dropdown-menu dropdown-grid">
+              <li v-for="genre in genres" :key="genre._id">
+                <router-link :to="`/the-loai/${genre.slug}`" @click="isMenuOpen = false">
+                  {{ genre.name }}
+                </router-link>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
 
-      <div class="header-actions">
+      <!-- Right Area -->
+      <div class="header-right">
+        <button class="search-icon-btn" type="button" @click="openSearch">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </button>
         <div class="search-box" :class="{ 'search-open': isSearchOpen }">
+          <svg class="search-box-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
           <input
             ref="searchInput"
             v-model="searchQuery"
             type="search"
             inputmode="search"
-            placeholder="Tìm kiếm phim..."
+            placeholder="T&igrave;m ki&#7871;m phim..."
             @keyup.enter="handleSearch"
           />
-          <button class="search-btn" type="button" @click="handleSearch">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
-            </svg>
-          </button>
           <button class="search-close-btn" type="button" @click="isSearchOpen = false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
-        <button class="search-toggle" type="button" @click="openSearch">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35"/>
-          </svg>
-        </button>
         <button class="menu-toggle" @click="toggleMenu">
           <span></span>
           <span></span>
@@ -124,35 +133,43 @@ const toggleMenu = () => {
   left: 0;
   right: 0;
   height: 72px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border);
+  background: rgba(10, 10, 10, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
 }
 
-.header-container {
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2rem;
+  padding: 0 56px;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.logo-icon {
+  color: #E50914;
 }
 
 .logo-text {
-  font-size: 1.5rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 22px;
   font-weight: 800;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  letter-spacing: 2px;
+}
+
+.logo:hover {
+  color: inherit;
 }
 
 .nav {
@@ -163,7 +180,7 @@ const toggleMenu = () => {
 .nav-list {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 36px;
 }
 
 .nav-item {
@@ -171,41 +188,39 @@ const toggleMenu = () => {
 }
 
 .nav-link {
-  display: block;
-  padding: 0.625rem 1rem;
-  font-size: 0.9rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.67);
   cursor: pointer;
   transition: var(--transition);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
+  padding: 8px 0;
 }
 
 .nav-link:hover {
-  color: var(--text-color);
-  background: var(--bg-elevated);
+  color: #FFFFFF;
 }
 
-.nav-link.router-link-active {
-  color: var(--primary-color);
+.nav-link--active,
+.nav-link.router-link-exact-active {
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 12px);
   left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  min-width: 200px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  padding: 0.5rem;
+  transform: translateX(-50%) translateY(8px);
+  min-width: 180px;
+  background: #1A1A1A;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px;
   opacity: 0;
   visibility: hidden;
   transition: var(--transition);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .dropdown:hover .dropdown-menu {
@@ -216,128 +231,111 @@ const toggleMenu = () => {
 
 .dropdown-menu li a {
   display: block;
-  padding: 0.625rem 1rem;
-  font-size: 0.875rem;
+  padding: 8px 12px;
+  font-size: 13px;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
   transition: var(--transition);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
 }
 
 .dropdown-menu li a:hover {
-  background: var(--bg-elevated);
-  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
 }
 
 .dropdown-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  min-width: 320px;
-  gap: 0.25rem;
+  min-width: 280px;
+  gap: 2px;
 }
 
-.header-actions {
+.header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 16px;
+}
+
+.search-icon-btn {
+  display: none;
+  padding: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  transition: var(--transition);
+}
+
+.search-icon-btn:hover {
+  color: #FFFFFF;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  background: var(--bg-elevated);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  padding: 0 16px;
+  height: 36px;
+  width: 200px;
   transition: var(--transition);
 }
 
 .search-box:focus-within {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-glow);
+  background: rgba(255, 255, 255, 0.12);
+  width: 260px;
+}
+
+.search-box-icon {
+  color: rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
 }
 
 .search-box input {
-  width: 220px;
-  padding: 0.75rem 1.25rem;
+  flex: 1;
   background: transparent;
   border: none;
-  color: var(--text-color);
-  font-size: 0.875rem;
+  color: #FFFFFF;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
 }
 
 .search-box input::placeholder {
-  color: var(--text-muted);
-}
-
-.search-box input:focus {
-  outline: none;
-}
-
-.search-btn {
-  padding: 0.75rem 1rem;
-  background: transparent;
-  color: var(--text-secondary);
-  transition: var(--transition);
-}
-
-.search-btn:hover {
-  color: var(--primary-color);
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .search-close-btn {
   display: none;
-  padding: 0.75rem;
+  padding: 4px;
   background: transparent;
-  color: var(--text-secondary);
-  transition: var(--transition);
-}
-
-.search-close-btn:hover {
-  color: var(--primary-color);
-}
-
-.search-toggle {
-  display: none;
-  padding: 0.625rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  color: var(--text-color);
-  transition: var(--transition);
-}
-
-.search-toggle:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .menu-toggle {
   display: none;
   flex-direction: column;
   gap: 5px;
-  padding: 0.625rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  transition: var(--transition);
-}
-
-.menu-toggle:hover {
-  border-color: var(--primary-color);
+  padding: 8px;
+  background: transparent;
 }
 
 .menu-toggle span {
   width: 20px;
   height: 2px;
-  background: var(--text-color);
-  border-radius: var(--radius-full);
+  background: #FFFFFF;
+  border-radius: 2px;
   transition: var(--transition);
 }
 
 @media (max-width: 1024px) {
-  .header-container {
-    position: relative;
+  .header-inner {
+    padding: 0 24px;
+  }
+
+  .nav-list {
+    gap: 24px;
   }
 
   .search-box {
@@ -350,31 +348,26 @@ const toggleMenu = () => {
     top: 80px;
     left: 16px;
     right: 16px;
-    background: var(--bg-color);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-lg);
+    width: auto;
+    background: #1A1A1A;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
     z-index: 1001;
+    height: 44px;
+    border-radius: 22px;
+    padding: 0 16px;
   }
 
   .search-box.search-open input {
-    width: 100%;
-    flex: 1;
-    font-size: 16px; /* Prevents iOS zoom on focus */
-    -webkit-appearance: none;
-    appearance: none;
+    font-size: 16px;
   }
 
   .search-box.search-open .search-close-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
   }
 
-  .search-box.search-open .search-btn {
-    padding: 0.75rem 0.5rem;
-  }
-
-  .search-toggle {
+  .search-icon-btn {
     display: flex;
   }
 }
@@ -388,7 +381,7 @@ const toggleMenu = () => {
     right: 0;
     height: calc(100vh - 72px);
     height: calc(100dvh - 72px);
-    background: #0a0a0f;
+    background: #0A0A0A;
     padding: 1.5rem;
     padding-bottom: 100px;
     transform: translateX(-100%);
@@ -408,18 +401,14 @@ const toggleMenu = () => {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  .nav-item {
-    width: 100%;
+    gap: 8px;
   }
 
   .nav-link {
-    padding: 1rem;
-    font-size: 1rem;
-    color: var(--text-color);
+    display: block;
+    padding: 12px;
+    font-size: 15px;
+    color: #FFFFFF;
   }
 
   .dropdown-menu {
@@ -427,32 +416,17 @@ const toggleMenu = () => {
     opacity: 1;
     visibility: visible;
     transform: none;
-    background: rgba(30, 30, 40, 0.6);
-    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    padding: 0.75rem;
-    margin-top: 0.5rem;
-    margin-left: 0;
+    border-radius: 8px;
+    padding: 8px;
+    margin-top: 4px;
     box-shadow: none;
     min-width: 100%;
-    width: 100%;
-  }
-
-  .dropdown-menu li a {
-    color: var(--text-secondary);
-    padding: 0.75rem 1rem;
   }
 
   .dropdown-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
     min-width: auto;
-    gap: 0.25rem;
-  }
-
-  .dropdown-grid li {
-    flex: none;
   }
 
   .menu-toggle {

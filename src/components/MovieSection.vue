@@ -15,8 +15,8 @@ defineProps<{
     <div class="section-header">
       <h2 class="section-title">{{ title }}</h2>
       <router-link v-if="viewAllLink" :to="viewAllLink" class="view-all">
-        Xem tất cả
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        Xem t&#7845;t c&#7843;
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="m9 18 6-6-6-6"/>
         </svg>
       </router-link>
@@ -25,8 +25,8 @@ defineProps<{
     <div v-if="loading" class="loading-spinner"></div>
 
     <div v-else-if="movies.length === 0" class="empty-state">
-      <h3>Không có phim</h3>
-      <p>Chưa có phim nào trong danh mục này</p>
+      <h3>Kh&ocirc;ng c&oacute; phim</h3>
+      <p>Ch&#432;a c&oacute; phim n&agrave;o trong danh m&#7909;c n&agrave;y</p>
     </div>
 
     <div v-else class="movie-grid">
@@ -37,34 +37,36 @@ defineProps<{
 
 <style scoped>
 .movie-section {
-  margin-bottom: 4rem;
+  margin-bottom: 48px;
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.75rem;
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
 }
 
 .view-all {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+  gap: 6px;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
   font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-full);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
+  color: rgba(255, 255, 255, 0.5);
   transition: var(--transition);
 }
 
 .view-all:hover {
-  color: var(--primary-color);
-  border-color: var(--primary-color);
-  background: rgba(99, 102, 241, 0.1);
+  color: #E50914;
 }
 
 .view-all svg {

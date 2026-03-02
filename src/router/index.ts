@@ -72,7 +72,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  const title = to.meta.title as string || 'Free Movie - Xem Phim Online'
+  const title = to.meta.title as string || 'CINEWORLD - Xem Phim Online'
   document.title = title
   next()
 })
