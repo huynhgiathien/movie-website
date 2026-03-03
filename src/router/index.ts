@@ -32,6 +32,12 @@ const routes: RouteRecordRaw[] = [
     meta: { type: 'tv-shows', title: 'TV Shows' }
   },
   {
+    path: '/phim-chieu-rap',
+    name: 'CinemaMovies',
+    component: () => import('@/views/MovieListView.vue'),
+    meta: { type: 'phim-chieu-rap', title: 'Phim Chiếu Rạp' }
+  },
+  {
     path: '/the-loai/:slug',
     name: 'Genre',
     component: () => import('@/views/GenreView.vue')

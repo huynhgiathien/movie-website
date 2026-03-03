@@ -18,14 +18,16 @@ const typeMap: Record<string, string> = {
   '/phim-bo': 'phim-bo',
   '/phim-le': 'phim-le',
   '/hoat-hinh': 'hoat-hinh',
-  '/tv-shows': 'tv-shows'
+  '/tv-shows': 'tv-shows',
+  '/phim-chieu-rap': 'phim-chieu-rap'
 }
 
 const titleMap: Record<string, string> = {
   'phim-bo': 'Phim Bộ',
   'phim-le': 'Phim Lẻ',
   'hoat-hinh': 'Hoạt Hình',
-  'tv-shows': 'TV Shows'
+  'tv-shows': 'TV Shows',
+  'phim-chieu-rap': 'Phim Chiếu Rạp'
 }
 
 const fetchMovies = async () => {

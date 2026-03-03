@@ -64,12 +64,12 @@ watch(() => route.params.slug, fetchMovie)
     <template v-else-if="movie">
       <!-- Detail Hero -->
       <section class="detail-hero">
-        <div class="hero-backdrop" :style="{ backgroundImage: `url(${getImageUrl(movie.thumb_url)})` }"></div>
+        <div class="hero-backdrop" :style="{ backgroundImage: `url(${getImageUrl(movie.poster_url)})` }"></div>
         <div class="hero-overlay"></div>
         <div class="detail-content">
           <!-- Poster -->
           <div class="movie-poster">
-            <img :src="getImageUrl(movie.poster_url)" :alt="movie.name" />
+            <img :src="getImageUrl(movie.thumb_url)" :alt="movie.name" />
           </div>
           <!-- Movie Info -->
           <div class="movie-info">

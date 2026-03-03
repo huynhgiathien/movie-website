@@ -9,6 +9,8 @@ interface MiniPlayerState {
   movieName: string | null
   movieSlug: string | null
   episodeName: string | null
+  episodeSlug: string | null
+  serverIndex: number
 }
 
 interface State {
@@ -51,7 +53,9 @@ export default createStore<State>({
       videoUrl: null,
       movieName: null,
       movieSlug: null,
-      episodeName: null
+      episodeName: null,
+      episodeSlug: null,
+      serverIndex: 0
     }
   },
 
@@ -96,7 +100,9 @@ export default createStore<State>({
         videoUrl: null,
         movieName: null,
         movieSlug: null,
-        episodeName: null
+        episodeName: null,
+        episodeSlug: null,
+        serverIndex: 0
       }
     },
     MINIMIZE_PLAYER(state) {

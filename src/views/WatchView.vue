@@ -38,7 +38,9 @@ const updateGlobalPlayer = () => {
       videoUrl: currentEpisode.value.link_embed,
       movieName: movie.value.name,
       movieSlug: movie.value.slug,
-      episodeName: currentEpisode.value.name
+      episodeName: currentEpisode.value.name,
+      episodeSlug: currentEpisode.value.slug,
+      serverIndex: currentServer.value
     })
   }
 }
@@ -53,13 +55,25 @@ const fetchMovie = async () => {
 
     if (movie.value.episodes?.length) {
       const tapQuery = route.query.tap as string
-      const firstServer = movie.value.episodes[0]
+      const savedState = store.state.miniPlayer
+      const isSameMovie = savedState.isActive && savedState.movieSlug === movie.value.slug
 
-      if (tapQuery && firstServer?.server_data) {
-        const found = firstServer.server_data.find(ep => ep.slug === tapQuery)
-        currentEpisode.value = found || firstServer.server_data[0]
-      } else if (firstServer?.server_data?.length) {
-        currentEpisode.value = firstServer.server_data[0]
+      // Restore server index from store if returning to the same movie
+      if (isSameMovie && savedState.serverIndex < movie.value.episodes.length) {
+        currentServer.value = savedState.serverIndex
+      }
+
+      const activeServer = movie.value.episodes[currentServer.value]
+
+      // Restore episode: query param > store state > first episode
+      if (tapQuery && activeServer?.server_data) {
+        const found = activeServer.server_data.find(ep => ep.slug === tapQuery)
+        currentEpisode.value = found || activeServer.server_data[0]
+      } else if (isSameMovie && savedState.episodeSlug && activeServer?.server_data) {
+        const found = activeServer.server_data.find(ep => ep.slug === savedState.episodeSlug)
+        currentEpisode.value = found || activeServer.server_data[0]
+      } else if (activeServer?.server_data?.length) {
+        currentEpisode.value = activeServer.server_data[0]
       }
     }
 
@@ -89,9 +103,20 @@ const selectEpisode = (ep: EpisodeData) => {
 }
 
 const selectServer = (index: number) => {
+  const prevEpisode = currentEpisode.value
   currentServer.value = index
   const serverData = movie.value?.episodes?.[index]?.server_data
-  if (serverData?.length) {
+  if (serverData?.length && prevEpisode) {
+    // Try to find the same episode on the new server
+    const match =
+      serverData.find(ep => ep.slug === prevEpisode.slug) ||
+      serverData.find(ep => ep.name === prevEpisode.name) ||
+      serverData[Math.min(
+        movie.value?.episodes?.[index - 1]?.server_data?.indexOf(prevEpisode) ?? 0,
+        serverData.length - 1
+      )]
+    selectEpisode(match || serverData[0])
+  } else if (serverData?.length) {
     selectEpisode(serverData[0])
   }
 }

@@ -8,7 +8,13 @@ import type { Movie } from '@/types'
 const recentMovies = ref<Movie[]>([])
 const seriesMovies = ref<Movie[]>([])
 const singleMovies = ref<Movie[]>([])
+const cinemaMovies = ref<Movie[]>([])
+const tvShowMovies = ref<Movie[]>([])
 const animeMovies = ref<Movie[]>([])
+const koreanMovies = ref<Movie[]>([])
+const chineseMovies = ref<Movie[]>([])
+const vietnamMovies = ref<Movie[]>([])
+const hongKongMovies = ref<Movie[]>([])
 const filteredMovies = ref<Movie[]>([])
 const loading = ref(true)
 const filterLoading = ref(false)
@@ -113,17 +119,29 @@ watch([activeCategory, activeCountry], () => {
 
 onMounted(async () => {
   try {
-    const [recent, series, single, anime] = await Promise.all([
+    const [recent, series, single, cinema, tvShows, anime, korean, chinese, vietnam, hongKong] = await Promise.all([
       movieApi.getRecentMovies(1),
       movieApi.getMovieList('phim-bo', { limit: 12 }),
       movieApi.getMovieList('phim-le', { limit: 12 }),
-      movieApi.getMovieList('hoat-hinh', { limit: 12 })
+      movieApi.getMovieList('phim-chieu-rap', { limit: 12 }),
+      movieApi.getMovieList('tv-shows', { limit: 12 }),
+      movieApi.getMovieList('hoat-hinh', { limit: 12 }),
+      movieApi.getMoviesByCountry('han-quoc', { limit: 12 }),
+      movieApi.getMoviesByCountry('trung-quoc', { limit: 12 }),
+      movieApi.getMoviesByCountry('viet-nam', { limit: 12 }),
+      movieApi.getMoviesByCountry('hong-kong', { limit: 12 })
     ])
 
     recentMovies.value = recent.items.slice(0, 12)
     seriesMovies.value = series.items
     singleMovies.value = single.items
+    cinemaMovies.value = cinema.items
+    tvShowMovies.value = tvShows.items
     animeMovies.value = anime.items
+    koreanMovies.value = korean.items
+    chineseMovies.value = chinese.items
+    vietnamMovies.value = vietnam.items
+    hongKongMovies.value = hongKong.items
 
     // Use the first 5 recent movies for hero carousel
     if (recent.items.length > 0) {
@@ -148,12 +166,9 @@ onMounted(async () => {
           :key="slide._id"
           :class="['hero-slide', { active: activeHeroIndex === index }]"
         >
-          <div class="hero-bg" :style="{ backgroundImage: `url(${getImageUrl(slide.thumb_url)})` }"></div>
+          <div class="hero-bg" :style="{ backgroundImage: `url(${getImageUrl(slide.poster_url)})` }"></div>
           <div class="hero-overlay"></div>
           <div class="hero-content">
-            <div class="hero-badge">
-              <span class="hero-badge-text">N&#7892;I B&#7852;T</span>
-            </div>
             <h1 class="hero-title">{{ slide.name }}</h1>
             <div class="hero-meta">
               <span v-if="slide.year" class="hero-year">{{ slide.year }}</span>
@@ -251,24 +266,67 @@ onMounted(async () => {
       <!-- Default Sections -->
       <template v-else>
         <MovieSection
-          title="Phim M&#7899;i C&#7853;p Nh&#7853;t"
+          title="Phim Mới Cập Nhật"
           :movies="recentMovies"
         />
 
         <MovieSection
-          title="Phim B&#7897;"
+          title="Phim Bộ"
           :movies="seriesMovies"
           view-all-link="/phim-bo"
         />
 
         <MovieSection
-          title="Phim L&#7867;"
+          title="Phim Lẻ Hay"
           :movies="singleMovies"
           view-all-link="/phim-le"
         />
 
         <MovieSection
-          title="Ho&#7841;t H&igrave;nh"
+          v-if="cinemaMovies.length"
+          title="Phim Chiếu Rạp"
+          :movies="cinemaMovies"
+          view-all-link="/phim-chieu-rap"
+        />
+
+        <MovieSection
+          v-if="vietnamMovies.length"
+          title="Phim Việt Nam"
+          :movies="vietnamMovies"
+          view-all-link="/quoc-gia/viet-nam"
+        />
+
+        <MovieSection
+          v-if="hongKongMovies.length"
+          title="Phim Hồng Kông"
+          :movies="hongKongMovies"
+          view-all-link="/quoc-gia/hong-kong"
+        />
+
+        <MovieSection
+          v-if="koreanMovies.length"
+          title="Phim Hàn Quốc"
+          :movies="koreanMovies"
+          view-all-link="/quoc-gia/han-quoc"
+        />
+
+        <MovieSection
+          v-if="chineseMovies.length"
+          title="Phim Trung Quốc"
+          :movies="chineseMovies"
+          view-all-link="/quoc-gia/trung-quoc"
+        />
+
+        <MovieSection
+          v-if="tvShowMovies.length"
+          title="TV Shows"
+          :movies="tvShowMovies"
+          view-all-link="/tv-shows"
+        />
+
+        <MovieSection
+          v-if="animeMovies.length"
+          title="Hoạt Hình"
           :movies="animeMovies"
           view-all-link="/hoat-hinh"
         />

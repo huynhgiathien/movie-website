@@ -1,11 +1,17 @@
 import axios from 'axios'
 import type { Movie, MovieDetail, MovieListResponse, GenreItem, ApiResponse } from '@/types'
 
-const API_BASE = 'https://phimapi.com'
-const IMAGE_CDN = 'https://phimimg.com'
+const API_BASE = 'https://ophim1.com'
+const API_SECONDARY = 'https://phimapi.com'
+const IMAGE_CDN = 'https://img.ophim.live/uploads/movies'
 
 const api = axios.create({
   baseURL: API_BASE,
+  timeout: 15000
+})
+
+const apiSecondary = axios.create({
+  baseURL: API_SECONDARY,
   timeout: 15000
 })
 
@@ -46,12 +52,40 @@ export const movieApi = {
   },
 
   async getMovieDetail(slug: string): Promise<MovieDetail> {
-    const response = await api.get(`/phim/${slug}`)
-    // Episodes are at top level, not inside movie object
-    return {
-      ...response.data.movie,
-      episodes: response.data.episodes
+    // Fetch from both APIs in parallel for more streaming servers
+    const [primary, secondary] = await Promise.all([
+      api.get(`/phim/${slug}`),
+      apiSecondary.get(`/phim/${slug}`).catch(() => null)
+    ])
+
+    const movie = primary.data.movie
+    const episodes = [...(primary.data.episodes || [])]
+    let secondaryEpisodes = secondary?.data?.episodes || []
+
+    // If secondary slug didn't match, search by movie name on secondary API
+    if (!secondaryEpisodes.length && movie?.name) {
+      try {
+        const searchRes = await apiSecondary.get(
+          `/v1/api/tim-kiem?keyword=${encodeURIComponent(movie.name)}&limit=5`
+        )
+        const results = searchRes.data?.data?.items || []
+        const match = results.find((m: any) => m.name === movie.name)
+        if (match) {
+          const detailRes = await apiSecondary.get(`/phim/${match.slug}`)
+          secondaryEpisodes = detailRes.data?.episodes || []
+        }
+      } catch {
+        // Secondary search failed, continue with primary only
+      }
     }
+
+    for (const server of secondaryEpisodes) {
+      if (server.server_data?.length) {
+        episodes.push(server)
+      }
+    }
+
+    return { ...movie, episodes }
   },
 
   async searchMovies(keyword: string, params: ListParams = {}): Promise<MovieListResponse> {

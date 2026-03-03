@@ -34,7 +34,11 @@ const closeMiniPlayer = () => {
 
 const goToMovie = () => {
   if (miniPlayer.value.movieSlug) {
-    router.push(`/xem-phim/${miniPlayer.value.movieSlug}`)
+    const query: Record<string, string> = {}
+    if (miniPlayer.value.episodeSlug) {
+      query.tap = miniPlayer.value.episodeSlug
+    }
+    router.push({ path: `/xem-phim/${miniPlayer.value.movieSlug}`, query })
   }
 }
 </script>

@@ -8,7 +8,7 @@ const props = defineProps<{
 }>()
 
 const posterUrl = computed(() => {
-  return movieApi.getImageUrl(props.movie.poster_url || props.movie.thumb_url)
+  return movieApi.getImageUrl(props.movie.thumb_url || props.movie.poster_url)
 })
 
 const movieUrl = computed(() => `/phim/${props.movie.slug}`)
