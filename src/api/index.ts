@@ -25,6 +25,15 @@ interface ListParams {
   limit?: number
 }
 
+// ophim API doesn't return totalPages, compute it from totalItems/totalItemsPerPage
+function fixPagination(data: MovieListResponse): MovieListResponse {
+  const p = data.params?.pagination
+  if (p && !p.totalPages && p.totalItems && p.totalItemsPerPage) {
+    p.totalPages = Math.ceil(p.totalItems / p.totalItemsPerPage)
+  }
+  return data
+}
+
 export const movieApi = {
   async getRecentMovies(page = 1): Promise<{ items: Movie[], pagination: any }> {
     const response = await api.get(`/danh-sach/phim-moi-cap-nhat?page=${page}`)
@@ -48,7 +57,7 @@ export const movieApi = {
     if (year) url += `&year=${year}`
 
     const response = await api.get<ApiResponse<MovieListResponse>>(url)
-    return response.data.data
+    return fixPagination(response.data.data)
   },
 
   async getMovieDetail(slug: string): Promise<MovieDetail> {
@@ -99,7 +108,7 @@ export const movieApi = {
     const response = await api.get<ApiResponse<MovieListResponse>>(
       `/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&page=${page}&sort_field=${sort_field}&sort_type=${sort_type}&limit=${limit}`
     )
-    return response.data.data
+    return fixPagination(response.data.data)
   },
 
   async getGenres(): Promise<GenreItem[]> {
@@ -120,7 +129,7 @@ export const movieApi = {
     if (country) url += `&country=${country}`
 
     const response = await api.get<ApiResponse<MovieListResponse>>(url)
-    return response.data.data
+    return fixPagination(response.data.data)
   },
 
   async getCountries(): Promise<GenreItem[]> {
@@ -141,7 +150,7 @@ export const movieApi = {
     if (category) url += `&category=${category}`
 
     const response = await api.get<ApiResponse<MovieListResponse>>(url)
-    return response.data.data
+    return fixPagination(response.data.data)
   },
 
   getImageUrl(url: string | null): string {
