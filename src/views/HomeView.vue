@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { movieApi } from '@/api'
 import MovieSection from '@/components/MovieSection.vue'
 import MovieCard from '@/components/MovieCard.vue'
+import PaginationComponent from '@/components/PaginationComponent.vue'
 import type { Movie } from '@/types'
 
 const recentMovies = ref<Movie[]>([])
@@ -16,6 +17,8 @@ const chineseMovies = ref<Movie[]>([])
 const vietnamMovies = ref<Movie[]>([])
 const hongKongMovies = ref<Movie[]>([])
 const filteredMovies = ref<Movie[]>([])
+const filteredPage = ref(1)
+const filteredTotalPages = ref(1)
 const loading = ref(true)
 const filterLoading = ref(false)
 
@@ -81,12 +84,14 @@ const categories = [
 
 const getImageUrl = (url: string | null) => movieApi.getImageUrl(url)
 
-const fetchFilteredMovies = async () => {
+const fetchFilteredMovies = async (page = 1) => {
   const cat = activeCategory.value
   const country = activeCountry.value
 
   if (cat === 'all' && !country) {
     filteredMovies.value = []
+    filteredPage.value = 1
+    filteredTotalPages.value = 1
     return
   }
 
@@ -94,16 +99,15 @@ const fetchFilteredMovies = async () => {
   try {
     let data
     if (cat !== 'all' && country) {
-      // Both category and country active - filter by genre with country param
-      data = await movieApi.getMoviesByGenre(cat, { country, limit: 24 })
+      data = await movieApi.getMoviesByGenre(cat, { country, page, limit: 24 })
     } else if (cat !== 'all') {
-      // Only category active
-      data = await movieApi.getMoviesByGenre(cat, { limit: 24 })
+      data = await movieApi.getMoviesByGenre(cat, { page, limit: 24 })
     } else {
-      // Only country active
-      data = await movieApi.getMoviesByCountry(country, { limit: 24 })
+      data = await movieApi.getMoviesByCountry(country, { page, limit: 24 })
     }
     filteredMovies.value = data.items || []
+    filteredPage.value = page
+    filteredTotalPages.value = data.params?.pagination?.totalPages || 1
   } catch (error) {
     console.error('Failed to fetch filtered movies:', error)
     filteredMovies.value = []
@@ -112,9 +116,15 @@ const fetchFilteredMovies = async () => {
   }
 }
 
-// Watch filter changes and re-fetch
+const onFilterPageChange = (page: number) => {
+  fetchFilteredMovies(page)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// Watch filter changes and re-fetch from page 1
 watch([activeCategory, activeCountry], () => {
-  fetchFilteredMovies()
+  filteredPage.value = 1
+  fetchFilteredMovies(1)
 })
 
 onMounted(async () => {
@@ -260,6 +270,11 @@ onMounted(async () => {
           <div class="movie-grid">
             <MovieCard v-for="movie in filteredMovies" :key="movie._id" :movie="movie" />
           </div>
+          <PaginationComponent
+            :current-page="filteredPage"
+            :total-pages="filteredTotalPages"
+            @page-change="onFilterPageChange"
+          />
         </section>
       </template>
 
