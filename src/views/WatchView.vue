@@ -6,6 +6,45 @@ import { movieApi } from '@/api'
 import MovieCard from '@/components/MovieCard.vue'
 import type { MovieDetail, EpisodeData, Movie } from '@/types'
 
+// Fullscreen & Lock
+const playerWrapper = ref<HTMLElement | null>(null)
+const isFullscreen = ref(false)
+const isLocked = ref(false)
+
+const toggleFullscreen = async () => {
+  if (!document.fullscreenElement) {
+    try {
+      await playerWrapper.value?.requestFullscreen()
+    } catch {}
+  } else {
+    try {
+      await document.exitFullscreen()
+    } catch {}
+  }
+}
+
+const handleFullscreenChange = () => {
+  isFullscreen.value = !!document.fullscreenElement
+  if (isFullscreen.value) {
+    try {
+      if (screen.orientation && 'lock' in screen.orientation) {
+        ;(screen.orientation as any).lock('landscape').catch(() => {})
+      }
+    } catch {}
+  } else {
+    isLocked.value = false
+    try {
+      if (screen.orientation && 'unlock' in screen.orientation) {
+        ;(screen.orientation as any).unlock()
+      }
+    } catch {}
+  }
+}
+
+const toggleLock = () => {
+  isLocked.value = !isLocked.value
+}
+
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
@@ -148,11 +187,16 @@ const handleVisibilityChange = () => {
 onMounted(() => {
   fetchMovie()
   document.addEventListener('visibilitychange', handleVisibilityChange)
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
 })
 
 onBeforeUnmount(() => {
   releaseWakeLock()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {})
+  }
 })
 
 watch(() => route.params.slug, () => {
@@ -180,7 +224,7 @@ watch(currentEpisode, () => {
     <template v-else-if="movie">
       <!-- Video Player (always rendered directly in flow, not fixed) -->
       <section class="video-player">
-        <div class="player-wrapper">
+        <div class="player-wrapper" ref="playerWrapper">
           <iframe
             v-if="currentEpisode?.link_embed"
             :src="currentEpisode.link_embed"
@@ -191,6 +235,31 @@ watch(currentEpisode, () => {
           <div v-else class="no-player">
             <p>Kh&ocirc;ng c&oacute; ngu&#7891;n ph&aacute;t cho t&#7853;p n&agrave;y</p>
           </div>
+
+          <!-- Lock overlay: blocks accidental touches on mobile -->
+          <div
+            v-if="isLocked"
+            class="lock-overlay"
+            @click.stop
+            @touchstart.prevent
+          ></div>
+
+          <!-- Lock button: mobile only, vertically centered on the left -->
+          <button
+            class="lock-btn-mobile"
+            :class="{ 'is-locked': isLocked }"
+            @click.stop="toggleLock"
+            :title="isLocked ? 'Mở khóa' : 'Khóa màn hình'"
+          >
+            <svg v-if="isLocked" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+            </svg>
+          </button>
         </div>
       </section>
 
@@ -308,6 +377,51 @@ watch(currentEpisode, () => {
   background: #111;
   color: rgba(255, 255, 255, 0.4);
   font-size: 14px;
+}
+
+/* Lock overlay: covers the player to block accidental touches */
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: transparent;
+  cursor: not-allowed;
+}
+
+/* Lock button: hidden on desktop, shown on mobile */
+.lock-btn-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .lock-btn-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 30;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .lock-btn-mobile:active {
+    background: rgba(0, 0, 0, 0.75);
+  }
+
+  .lock-btn-mobile.is-locked {
+    background: rgba(229, 9, 20, 0.65);
+    border-color: #E50914;
+    color: #FFFFFF;
+  }
 }
 
 /* Below Player */

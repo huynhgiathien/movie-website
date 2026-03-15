@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { movieApi } from '@/api'
 import MovieSection from '@/components/MovieSection.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import PaginationComponent from '@/components/PaginationComponent.vue'
 import type { Movie } from '@/types'
+
+const route = useRoute()
+const router = useRouter()
 
 const recentMovies = ref<Movie[]>([])
 const seriesMovies = ref<Movie[]>([])
@@ -64,10 +68,48 @@ const countries = [
   { slug: 'an-do', name: 'Ấn Độ' },
 ]
 
-const activeCategory = ref('all')
-const activeCountry = ref('')
+// Restore filter state from URL query params (persists across navigation)
+const activeCategory = ref((route.query.category as string) || 'all')
+const activeCountry = ref((route.query.country as string) || '')
 
 const isFiltered = computed(() => activeCategory.value !== 'all' || activeCountry.value !== '')
+
+const syncFiltersToUrl = () => {
+  const query: Record<string, string> = {}
+  if (activeCategory.value !== 'all') query.category = activeCategory.value
+  if (activeCountry.value) query.country = activeCountry.value
+  if (filteredPage.value > 1) query.page = String(filteredPage.value)
+  router.replace({ query })
+}
+
+// Mobile filter panel collapse
+const filterPanelOpen = ref(true)
+
+const collapseOnMobile = () => {
+  if (window.innerWidth <= 768) {
+    setTimeout(() => { filterPanelOpen.value = false }, 300)
+  }
+}
+
+const selectCountry = (slug: string) => {
+  activeCountry.value = slug
+  collapseOnMobile()
+}
+
+const selectCategory = (key: string) => {
+  activeCategory.value = key
+  collapseOnMobile()
+}
+
+const clearFilters = () => {
+  activeCategory.value = 'all'
+  activeCountry.value = ''
+  filterPanelOpen.value = true
+}
+
+const toggleFilterPanel = () => {
+  filterPanelOpen.value = !filterPanelOpen.value
+}
 
 const categories = [
   { key: 'all', label: 'T\u1EA5t c\u1EA3' },
@@ -105,7 +147,9 @@ const fetchFilteredMovies = async (page = 1) => {
     } else {
       data = await movieApi.getMoviesByCountry(country, { page, limit: 24 })
     }
-    filteredMovies.value = data.items || []
+    // Sort by year descending so newest movies appear first
+    const items = (data.items || []).slice().sort((a, b) => (b.year || 0) - (a.year || 0))
+    filteredMovies.value = items
     filteredPage.value = page
     filteredTotalPages.value = data.params?.pagination?.totalPages || 1
   } catch (error) {
@@ -117,6 +161,8 @@ const fetchFilteredMovies = async (page = 1) => {
 }
 
 const onFilterPageChange = (page: number) => {
+  filteredPage.value = page
+  syncFiltersToUrl()
   fetchFilteredMovies(page)
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -124,10 +170,20 @@ const onFilterPageChange = (page: number) => {
 // Watch filter changes and re-fetch from page 1
 watch([activeCategory, activeCountry], () => {
   filteredPage.value = 1
+  syncFiltersToUrl()
   fetchFilteredMovies(1)
 })
 
 onMounted(async () => {
+  // Restore filter page from URL if available
+  const pageFromUrl = Number(route.query.page) || 1
+  if (pageFromUrl > 1) filteredPage.value = pageFromUrl
+
+  // If filters were active, fetch filtered results immediately
+  if (isFiltered.value) {
+    fetchFilteredMovies(filteredPage.value)
+  }
+
   try {
     const [recent, series, single, cinema, tvShows, anime, korean, chinese, vietnam, hongKong] = await Promise.all([
       movieApi.getRecentMovies(1),
@@ -220,37 +276,58 @@ onMounted(async () => {
 
     <!-- Filter Section -->
     <section class="filter-section">
-      <!-- Country Filter -->
-      <div class="filter-top">
-        <div class="country-label">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-            <path d="M2 12h20"/>
+      <!-- Mobile collapsible header -->
+      <div class="filter-mobile-header" @click="toggleFilterPanel">
+        <div class="filter-mobile-left">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
           </svg>
-          <span>Qu&#7889;c gia</span>
+          <span class="filter-mobile-title">Bộ lọc</span>
+          <span v-if="activeCountry" class="filter-badge">{{ countries.find(c => c.slug === activeCountry)?.name }}</span>
+          <span v-if="activeCategory !== 'all'" class="filter-badge">{{ categories.find(c => c.key === activeCategory)?.label }}</span>
         </div>
-        <div class="country-tabs">
-          <button
-            :class="['tab-btn', { active: activeCountry === '' }]"
-            @click="activeCountry = ''"
-          >T&#7845;t c&#7843;</button>
-          <button
-            v-for="country in countries"
-            :key="country.slug"
-            :class="['tab-btn', { active: activeCountry === country.slug }]"
-            @click="activeCountry = country.slug"
-          >{{ country.name }}</button>
+        <div class="filter-mobile-right">
+          <button v-if="isFiltered" class="filter-clear-btn" @click.stop="clearFilters">Xóa</button>
+          <svg class="filter-chevron" :class="{ 'is-open': filterPanelOpen }" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </div>
       </div>
-      <!-- Category Tabs -->
-      <div class="category-tabs">
-        <button
-          v-for="cat in categories"
-          :key="cat.key"
-          :class="['category-tab', { active: activeCategory === cat.key }]"
-          @click="activeCategory = cat.key"
-        >{{ cat.label }}</button>
+
+      <!-- Filter body (collapsible on mobile) -->
+      <div class="filter-body" :class="{ 'is-open': filterPanelOpen }">
+        <!-- Country Filter -->
+        <div class="filter-top">
+          <div class="country-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+              <path d="M2 12h20"/>
+            </svg>
+            <span>Qu&#7889;c gia</span>
+          </div>
+          <div class="country-tabs">
+            <button
+              :class="['tab-btn', { active: activeCountry === '' }]"
+              @click="selectCountry('')"
+            >T&#7845;t c&#7843;</button>
+            <button
+              v-for="country in countries"
+              :key="country.slug"
+              :class="['tab-btn', { active: activeCountry === country.slug }]"
+              @click="selectCountry(country.slug)"
+            >{{ country.name }}</button>
+          </div>
+        </div>
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+          <button
+            v-for="cat in categories"
+            :key="cat.key"
+            :class="['category-tab', { active: activeCategory === cat.key }]"
+            @click="selectCategory(cat.key)"
+          >{{ cat.label }}</button>
+        </div>
       </div>
     </section>
 
@@ -643,6 +720,18 @@ onMounted(async () => {
   }
 }
 
+/* Mobile filter header (hidden on desktop) */
+.filter-mobile-header {
+  display: none;
+}
+
+/* Filter body: on desktop always visible */
+.filter-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 @media (max-width: 768px) {
   .hero-section {
     height: 500px;
@@ -676,6 +765,91 @@ onMounted(async () => {
 
   .country-tabs {
     flex-wrap: wrap;
+  }
+
+  /* Mobile: show collapsible header */
+  .filter-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 4px 0;
+    user-select: none;
+  }
+
+  .filter-mobile-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .filter-mobile-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+  }
+
+  .filter-badge {
+    font-family: 'Sora', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #FFFFFF;
+    background: #E50914;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+
+  .filter-mobile-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .filter-clear-btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .filter-clear-btn:hover {
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .filter-chevron {
+    color: rgba(255, 255, 255, 0.5);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  .filter-chevron.is-open {
+    transform: rotate(180deg);
+  }
+
+  /* Collapsible body */
+  .filter-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.25s ease;
+    opacity: 0;
+    padding-top: 0;
+  }
+
+  .filter-body.is-open {
+    max-height: 600px;
+    opacity: 1;
+    padding-top: 16px;
   }
 }
 

@@ -535,16 +535,17 @@ watch(() => route.params.slug, fetchMovie)
 }
 
 .trailer-close {
-  position: absolute;
-  top: -44px;
-  right: 0;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10001;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   color: #FFFFFF;
   cursor: pointer;
@@ -552,7 +553,17 @@ watch(() => route.params.slug, fetchMovie)
 }
 
 .trailer-close:hover {
-  background: rgba(229, 9, 20, 0.6);
+  background: rgba(229, 9, 20, 0.7);
+}
+
+@media (orientation: landscape) and (max-width: 900px) {
+  .trailer-modal {
+    padding: 8px 56px 8px 8px;
+    align-items: flex-start;
+  }
+  .trailer-container {
+    max-height: 100vh;
+  }
 }
 
 .trailer-player {
