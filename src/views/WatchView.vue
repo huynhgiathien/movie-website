@@ -35,13 +35,16 @@ const unlockOrientation = () => {
 }
 
 // Triggered by the embedded player's own fullscreen button: when the iframe
-// (or any child) enters fullscreen we auto-rotate to landscape where supported.
+// (or any child) enters fullscreen we auto-rotate to landscape where supported
+// and re-request the wake lock, because some browsers release it during the
+// fullscreen transition.
 const handleFullscreenChange = () => {
   if (getFullscreenElement()) {
     lockLandscape()
   } else {
     unlockOrientation()
   }
+  requestWakeLock()
 }
 
 const route = useRoute()
@@ -159,21 +162,35 @@ const selectServer = (index: number) => {
   }
 }
 
-// Screen Wake Lock - keep screen on while watching
+// Screen Wake Lock - keep screen on while watching.
+// The browser can auto-release the lock on visibility changes, focus loss,
+// or fullscreen transitions, so we must re-request whenever it is released.
 let wakeLock: WakeLockSentinel | null = null
+
+const canHoldWakeLock = () =>
+  document.visibilityState === 'visible' && !!currentEpisode.value?.link_embed
 
 const requestWakeLock = async () => {
   if (!('wakeLock' in navigator)) return
+  if (wakeLock) return // already active
+  if (!canHoldWakeLock()) return
   try {
     wakeLock = await navigator.wakeLock.request('screen')
-    wakeLock.addEventListener('release', () => { wakeLock = null })
-  } catch {
-    // Wake lock request failed (e.g. low battery)
+    wakeLock.addEventListener('release', () => {
+      wakeLock = null
+      // Auto re-acquire: the browser releases the lock on some fullscreen
+      // transitions even while the page is still visible. Recover silently.
+      if (canHoldWakeLock()) {
+        requestWakeLock()
+      }
+    })
+  } catch (err) {
+    console.warn('[WatchView] Wake lock request failed:', err)
   }
 }
 
 const releaseWakeLock = () => {
-  wakeLock?.release()
+  wakeLock?.release().catch(() => {})
   wakeLock = null
 }
 
