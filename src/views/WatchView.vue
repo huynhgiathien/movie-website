@@ -7,23 +7,8 @@ import MovieCard from '@/components/MovieCard.vue'
 import type { MovieDetail, EpisodeData, Movie } from '@/types'
 
 // Fullscreen & Lock
-const playerWrapper = ref<HTMLElement | null>(null)
 const isFullscreen = ref(false)
 const isLocked = ref(false)
-// Pseudo-fullscreen is a CSS-based fallback used when the native Fullscreen API
-// + screen.orientation.lock are not available (primarily iOS Safari on iPhone).
-const isPseudoFullscreen = ref(false)
-const isPortrait = ref(false)
-
-// iOS detection (iPadOS 13+ reports as Mac, so also check touch support).
-const isIOS = typeof navigator !== 'undefined' && (
-  /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-  (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
-)
-
-const updateOrientation = () => {
-  isPortrait.value = window.innerHeight > window.innerWidth
-}
 
 const lockLandscape = () => {
   try {
@@ -45,67 +30,15 @@ const unlockOrientation = () => {
   } catch {}
 }
 
-const enterPseudoFullscreen = () => {
-  isPseudoFullscreen.value = true
-  isFullscreen.value = true
-  updateOrientation()
-  document.documentElement.style.overflow = 'hidden'
-  document.body.style.overflow = 'hidden'
-  window.addEventListener('resize', updateOrientation)
-  window.addEventListener('orientationchange', updateOrientation)
-}
-
-const exitPseudoFullscreen = () => {
-  isPseudoFullscreen.value = false
-  isFullscreen.value = false
-  isLocked.value = false
-  document.documentElement.style.overflow = ''
-  document.body.style.overflow = ''
-  window.removeEventListener('resize', updateOrientation)
-  window.removeEventListener('orientationchange', updateOrientation)
-}
-
-const toggleFullscreen = async () => {
-  // Exit if already in some form of fullscreen
-  if (isPseudoFullscreen.value) {
-    exitPseudoFullscreen()
-    return
-  }
-  if (document.fullscreenElement) {
-    try {
-      await document.exitFullscreen()
-    } catch {}
-    return
-  }
-  // Prefer native Fullscreen API on non-iOS devices
-  if (!isIOS && playerWrapper.value?.requestFullscreen) {
-    try {
-      await playerWrapper.value.requestFullscreen()
-      return
-    } catch {
-      // Fall through to pseudo-fullscreen
-    }
-  }
-  // Fallback: CSS pseudo-fullscreen (iOS or browsers that rejected the request)
-  enterPseudoFullscreen()
-}
-
+// Triggered by the embedded player's own fullscreen button: when the iframe
+// (or any child) enters fullscreen we auto-rotate to landscape where supported.
 const handleFullscreenChange = () => {
-  // Only reflect native fullscreen state here; pseudo-fullscreen manages its own flags.
-  if (isPseudoFullscreen.value) return
   isFullscreen.value = !!document.fullscreenElement
   if (isFullscreen.value) {
-    // Auto-rotate to landscape on devices that support it (Android Chrome/Edge)
     lockLandscape()
   } else {
     isLocked.value = false
     unlockOrientation()
-  }
-}
-
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && isPseudoFullscreen.value) {
-    exitPseudoFullscreen()
   }
 }
 
@@ -256,17 +189,12 @@ onMounted(() => {
   fetchMovie()
   document.addEventListener('visibilitychange', handleVisibilityChange)
   document.addEventListener('fullscreenchange', handleFullscreenChange)
-  document.addEventListener('keydown', handleKeyDown)
 })
 
 onBeforeUnmount(() => {
   releaseWakeLock()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  document.removeEventListener('keydown', handleKeyDown)
-  if (isPseudoFullscreen.value) {
-    exitPseudoFullscreen()
-  }
   if (document.fullscreenElement) {
     document.exitFullscreen().catch(() => {})
   }
@@ -297,15 +225,7 @@ watch(currentEpisode, () => {
     <template v-else-if="movie">
       <!-- Video Player (always rendered directly in flow, not fixed) -->
       <section class="video-player">
-        <div
-          class="player-wrapper"
-          :class="{
-            'is-fullscreen': isFullscreen,
-            'is-pseudo-fullscreen': isPseudoFullscreen,
-            'is-portrait': isPortrait,
-          }"
-          ref="playerWrapper"
-        >
+        <div class="player-wrapper">
           <iframe
             v-if="currentEpisode?.link_embed"
             :src="currentEpisode.link_embed"
@@ -342,28 +262,6 @@ watch(currentEpisode, () => {
             </svg>
           </button>
 
-          <!-- Fullscreen button: mobile only, vertically centered on the right.
-               On iOS this triggers a CSS pseudo-fullscreen (with rotation) since
-               the native Fullscreen API + screen.orientation.lock are unsupported. -->
-          <button
-            v-if="!isLocked"
-            class="fs-btn-mobile"
-            @click.stop="toggleFullscreen"
-            :title="isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình'"
-          >
-            <svg v-if="!isFullscreen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
-              <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
-              <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
-              <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 3v4a2 2 0 0 1-2 2H3"/>
-              <path d="M15 3v4a2 2 0 0 0 2 2h4"/>
-              <path d="M15 21v-4a2 2 0 0 1 2-2h4"/>
-              <path d="M9 21v-4a2 2 0 0 0-2-2H3"/>
-            </svg>
-          </button>
         </div>
       </section>
 
@@ -492,116 +390,40 @@ watch(currentEpisode, () => {
   cursor: not-allowed;
 }
 
-/* Lock button: shared styles (hidden by default) */
+/* Lock button: hidden on desktop, shown on mobile */
 .lock-btn-mobile {
   display: none;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 30;
-  width: 40px;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.lock-btn-mobile:active {
-  background: rgba(0, 0, 0, 0.75);
-}
-
-.lock-btn-mobile.is-locked {
-  background: rgba(229, 9, 20, 0.65);
-  border-color: #E50914;
-  color: #FFFFFF;
-}
-
-/* Show on mobile widths */
 @media (max-width: 768px) {
   .lock-btn-mobile {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 30;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
   }
-}
 
-/* Also show whenever the player is in fullscreen, regardless of viewport width.
-   This fixes the case where entering fullscreen on a phone/tablet rotates to
-   landscape and the viewport becomes wider than 768px, hiding the button. */
-.player-wrapper.is-fullscreen .lock-btn-mobile,
-.player-wrapper.is-pseudo-fullscreen .lock-btn-mobile,
-.player-wrapper:fullscreen .lock-btn-mobile,
-.player-wrapper:-webkit-full-screen .lock-btn-mobile {
-  display: flex;
-}
-
-/* Fullscreen toggle button: mirrors the lock button on the right side */
-.fs-btn-mobile {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 30;
-  width: 40px;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.fs-btn-mobile:active {
-  background: rgba(0, 0, 0, 0.75);
-}
-
-@media (max-width: 768px) {
-  .fs-btn-mobile {
-    display: flex;
+  .lock-btn-mobile:active {
+    background: rgba(0, 0, 0, 0.75);
   }
-}
 
-.player-wrapper.is-fullscreen .fs-btn-mobile,
-.player-wrapper.is-pseudo-fullscreen .fs-btn-mobile,
-.player-wrapper:fullscreen .fs-btn-mobile,
-.player-wrapper:-webkit-full-screen .fs-btn-mobile {
-  display: flex;
-}
-
-/* Pseudo-fullscreen: CSS-based viewport takeover used when the Fullscreen API
-   and screen.orientation.lock are not supported (iOS Safari). */
-.player-wrapper.is-pseudo-fullscreen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  max-width: none;
-  margin: 0;
-  aspect-ratio: auto;
-  background: #000;
-  z-index: 9999;
-}
-
-/* When the viewport is portrait, rotate the content 90deg to simulate landscape.
-   Users get a landscape-oriented video on a portrait-held phone; physically
-   rotating the phone will hit the non-portrait branch and render natively. */
-.player-wrapper.is-pseudo-fullscreen.is-portrait {
-  top: 50%;
-  left: 50%;
-  width: 100vh;
-  height: 100vw;
-  transform: translate(-50%, -50%) rotate(90deg);
-  transform-origin: center center;
+  .lock-btn-mobile.is-locked {
+    background: rgba(229, 9, 20, 0.65);
+    border-color: #E50914;
+    color: #FFFFFF;
+  }
 }
 
 /* Below Player */
