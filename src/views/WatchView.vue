@@ -6,9 +6,13 @@ import { movieApi } from '@/api'
 import MovieCard from '@/components/MovieCard.vue'
 import type { MovieDetail, EpisodeData, Movie } from '@/types'
 
-// Fullscreen & Lock
-const isFullscreen = ref(false)
-const isLocked = ref(false)
+// Cross-browser fullscreenElement lookup: WebKit (Safari), Moz (older Firefox), MS (legacy Edge)
+const getFullscreenElement = (): Element | null =>
+  document.fullscreenElement ||
+  (document as any).webkitFullscreenElement ||
+  (document as any).mozFullScreenElement ||
+  (document as any).msFullscreenElement ||
+  null
 
 const lockLandscape = () => {
   try {
@@ -33,17 +37,11 @@ const unlockOrientation = () => {
 // Triggered by the embedded player's own fullscreen button: when the iframe
 // (or any child) enters fullscreen we auto-rotate to landscape where supported.
 const handleFullscreenChange = () => {
-  isFullscreen.value = !!document.fullscreenElement
-  if (isFullscreen.value) {
+  if (getFullscreenElement()) {
     lockLandscape()
   } else {
-    isLocked.value = false
     unlockOrientation()
   }
-}
-
-const toggleLock = () => {
-  isLocked.value = !isLocked.value
 }
 
 const route = useRoute()
@@ -189,14 +187,23 @@ onMounted(() => {
   fetchMovie()
   document.addEventListener('visibilitychange', handleVisibilityChange)
   document.addEventListener('fullscreenchange', handleFullscreenChange)
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+  document.addEventListener('mozfullscreenchange', handleFullscreenChange)
+  document.addEventListener('MSFullscreenChange', handleFullscreenChange)
 })
 
 onBeforeUnmount(() => {
   releaseWakeLock()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  if (document.fullscreenElement) {
-    document.exitFullscreen().catch(() => {})
+  document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+  document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
+  document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
+  if (getFullscreenElement()) {
+    (document as any).exitFullscreen?.() ||
+      (document as any).webkitExitFullscreen?.() ||
+      (document as any).mozCancelFullScreen?.() ||
+      (document as any).msExitFullscreen?.()
   }
 })
 
@@ -231,37 +238,11 @@ watch(currentEpisode, () => {
             :src="currentEpisode.link_embed"
             frameborder="0"
             allowfullscreen
-            allow="autoplay; encrypted-media"
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           ></iframe>
           <div v-else class="no-player">
             <p>Kh&ocirc;ng c&oacute; ngu&#7891;n ph&aacute;t cho t&#7853;p n&agrave;y</p>
           </div>
-
-          <!-- Lock overlay: blocks accidental touches on mobile -->
-          <div
-            v-if="isLocked"
-            class="lock-overlay"
-            @click.stop
-            @touchstart.prevent
-          ></div>
-
-          <!-- Lock button: mobile only, vertically centered on the left -->
-          <button
-            class="lock-btn-mobile"
-            :class="{ 'is-locked': isLocked }"
-            @click.stop="toggleLock"
-            :title="isLocked ? 'Mở khóa' : 'Khóa màn hình'"
-          >
-            <svg v-if="isLocked" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-            </svg>
-          </button>
-
         </div>
       </section>
 
@@ -379,51 +360,6 @@ watch(currentEpisode, () => {
   background: #111;
   color: rgba(255, 255, 255, 0.4);
   font-size: 14px;
-}
-
-/* Lock overlay: covers the player to block accidental touches */
-.lock-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  background: transparent;
-  cursor: not-allowed;
-}
-
-/* Lock button: hidden on desktop, shown on mobile */
-.lock-btn-mobile {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .lock-btn-mobile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 30;
-    width: 40px;
-    height: 40px;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
-  }
-
-  .lock-btn-mobile:active {
-    background: rgba(0, 0, 0, 0.75);
-  }
-
-  .lock-btn-mobile.is-locked {
-    background: rgba(229, 9, 20, 0.65);
-    border-color: #E50914;
-    color: #FFFFFF;
-  }
 }
 
 /* Below Player */
