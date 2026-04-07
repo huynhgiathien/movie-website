@@ -23,21 +23,34 @@ const toggleFullscreen = async () => {
   }
 }
 
+const lockLandscape = () => {
+  try {
+    const orientation = screen.orientation as any
+    if (orientation?.lock) {
+      orientation.lock('landscape').catch(() => {})
+    }
+  } catch {
+    // Orientation lock not supported (e.g. iOS Safari)
+  }
+}
+
+const unlockOrientation = () => {
+  try {
+    const orientation = screen.orientation as any
+    if (orientation?.unlock) {
+      orientation.unlock()
+    }
+  } catch {}
+}
+
 const handleFullscreenChange = () => {
   isFullscreen.value = !!document.fullscreenElement
   if (isFullscreen.value) {
-    try {
-      if (screen.orientation && 'lock' in screen.orientation) {
-        ;(screen.orientation as any).lock('landscape').catch(() => {})
-      }
-    } catch {}
+    // Auto-rotate to landscape on devices that support it
+    lockLandscape()
   } else {
     isLocked.value = false
-    try {
-      if (screen.orientation && 'unlock' in screen.orientation) {
-        ;(screen.orientation as any).unlock()
-      }
-    } catch {}
+    unlockOrientation()
   }
 }
 
@@ -224,7 +237,11 @@ watch(currentEpisode, () => {
     <template v-else-if="movie">
       <!-- Video Player (always rendered directly in flow, not fixed) -->
       <section class="video-player">
-        <div class="player-wrapper" ref="playerWrapper">
+        <div
+          class="player-wrapper"
+          :class="{ 'is-fullscreen': isFullscreen }"
+          ref="playerWrapper"
+        >
           <iframe
             v-if="currentEpisode?.link_embed"
             :src="currentEpisode.link_embed"
@@ -388,40 +405,50 @@ watch(currentEpisode, () => {
   cursor: not-allowed;
 }
 
-/* Lock button: hidden on desktop, shown on mobile */
+/* Lock button: shared styles (hidden by default) */
 .lock-btn-mobile {
   display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
+.lock-btn-mobile:active {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.lock-btn-mobile.is-locked {
+  background: rgba(229, 9, 20, 0.65);
+  border-color: #E50914;
+  color: #FFFFFF;
+}
+
+/* Show on mobile widths */
 @media (max-width: 768px) {
   .lock-btn-mobile {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 30;
-    width: 40px;
-    height: 40px;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
   }
+}
 
-  .lock-btn-mobile:active {
-    background: rgba(0, 0, 0, 0.75);
-  }
-
-  .lock-btn-mobile.is-locked {
-    background: rgba(229, 9, 20, 0.65);
-    border-color: #E50914;
-    color: #FFFFFF;
-  }
+/* Also show whenever the player is in fullscreen, regardless of viewport width.
+   This fixes the case where entering fullscreen on a phone/tablet rotates to
+   landscape and the viewport becomes wider than 768px, hiding the button. */
+.player-wrapper.is-fullscreen .lock-btn-mobile,
+.player-wrapper:fullscreen .lock-btn-mobile,
+.player-wrapper:-webkit-full-screen .lock-btn-mobile {
+  display: flex;
 }
 
 /* Below Player */
